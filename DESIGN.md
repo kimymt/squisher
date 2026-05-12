@@ -206,3 +206,7 @@ body {
 | 2026-05-12 | Before/After比較スライダーを採用しない | iPhoneユーザーは画質より容量を気にする現実に合わせる、Squoosh的UIから明確に逸脱 |
 | 2026-05-12 | 線形プログレスバーを使用禁止 | Webアプリ感の源を排除、iOS風円形スピナーに統一 |
 | 2026-05-12 | `-apple-system` を正規ルートとして採用 | iOS PWAでSF Proを得る唯一のルート、gstack skillのblacklistから意図的逸脱 |
+| 2026-05-13 | ファイル行内の JPEG/WebP 切替はミニセグメンテッド(7px radius、`ui-monospace` 11px、`--segmented-bg`/`--segmented-selected` 流用) | 上部の品質セグメンテッドの縮小版。新規スタイルを増やさず一貫させる。secondary コントロールなので min-height 26px |
+| 2026-05-13 | 保存失敗の通知はインライン(`--danger` 文字 + `rgba(255,59,48,0.1)` 地、`--radius-md`、SaveBar の保存ボタン上) | JS の `alert()` を排除。ブロッキングしない、iOS の inline error 流。`larger` 警告と同じ色系統 |
+| 2026-05-13 | ホーム画面追加バナーは `--accent-soft` 地のカード + iOS 共有グリフ(box+up-arrow の SVG)+ × | 「Apple純正」軸に沿った静かな促進。ヘッダー直下、初回圧縮後にのみ出現、dismiss は永続 |
+| 2026-05-13 | アプリアイコン: `#30694B` 地に白の "S"、角丸は焼き込まない | iOS / 各ランチャーが独自マスクを当てる。maskable 用は "S" を小さくしてセーフゾーン内に。MVP は自前生成、プロ制作は後日 |
