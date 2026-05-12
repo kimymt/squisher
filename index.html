@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#30694B">
+  <title>Squisher Spike — Feasibility Verification</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>Squisher Spike</h1>
+      <p class="sub">Phase 0 — feasibility verification on iOS</p>
+    </header>
+
+    <section class="env-info">
+      <div class="env-label">Environment</div>
+      <pre id="envInfo" class="env-output mono"></pre>
+    </section>
+
+    <section class="test">
+      <h2>Test 1 — HEIC → &lt;img&gt; → Canvas → JPEG</h2>
+      <p class="hint">HEIC を選んで、HTMLImageElement 経由でデコード → Canvas に描画 → JPEG エンコード成功するか確認します。</p>
+      <label class="file-input">
+        <input type="file" accept="image/heic,image/heif,image/*" data-test="1">
+        <span>HEIC を選択</span>
+      </label>
+      <div class="result" data-result="1">未実行</div>
+      <canvas class="preview" data-canvas="1"></canvas>
+    </section>
+
+    <section class="test">
+      <h2>Test 2 — HEIC × createImageBitmap (失敗を期待)</h2>
+      <p class="hint">同じファイルを <code>createImageBitmap</code> 直接呼びで読みます。Subagent の指摘では WebKit で失敗するはず。</p>
+      <label class="file-input">
+        <input type="file" accept="image/heic,image/heif,image/*" data-test="2">
+        <span>HEIC を選択</span>
+      </label>
+      <div class="result" data-result="2">未実行</div>
+    </section>
+
+    <section class="test">
+      <h2>Test 3 — Canvas 16Mピクセル制限</h2>
+      <p class="hint">大きい画像(できれば Pro Max パノラマや連写など 16Mピクセル超)で Canvas drawImage の挙動を確認します。</p>
+      <label class="file-input">
+        <input type="file" accept="image/*" data-test="3">
+        <span>大きい画像を選択</span>
+      </label>
+      <div class="result" data-result="3">未実行</div>
+      <canvas class="preview" data-canvas="3"></canvas>
+    </section>
+
+    <section class="test">
+      <h2>Test 4 — navigator.canShare({ files })</h2>
+      <p class="hint">小さい画像を選んで、`canShare({ files })` が true を返すか確認します。</p>
+      <label class="file-input">
+        <input type="file" accept="image/*" data-test="4">
+        <span>画像を選択</span>
+      </label>
+      <div class="result" data-result="4">未実行</div>
+    </section>
+
+    <section class="test">
+      <h2>Test 5 — navigator.share({ files })</h2>
+      <p class="hint">Test 4 と同じ画像で実際に共有シートを起動します。iOS の「写真」が選択肢に出るかを確認。</p>
+      <button type="button" id="runShareTest" disabled>共有を実行</button>
+      <div class="result" data-result="5">Test 4 を先に実行してください</div>
+    </section>
+
+    <section class="log">
+      <h2>Console</h2>
+      <pre id="logOutput" class="log-output mono"></pre>
+    </section>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
