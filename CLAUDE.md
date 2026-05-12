@@ -21,8 +21,8 @@ In QA mode, flag any code that doesn't match DESIGN.md.
 
 ## Testing
 
-- 実行: `npm test`（`vitest run`）。テストは `test/` ディレクトリ。詳細は `TESTING.md`。
-- フレームワーク: Vitest + jsdom + @testing-library/preact。設定は `vitest.config.ts`（`vite.config.ts` とは別）。
+- 実行: `npm test`（Vitest、ユニット+コンポーネント、`test/`）/ `npm run e2e`（Playwright、`e2e/`、dev server を自動起動）。詳細は `TESTING.md`。
+- フレームワーク: Vitest + jsdom + @testing-library/preact（設定 `vitest.config.ts`、`vite.config.ts` とは別）、@playwright/test（chromium、設定 `playwright.config.ts`）。`compress.ts` は jsdom に canvas が無いので E2E が実ブラウザで通す。
 - 期待値:
   - 100% カバレッジを目指す — テストが vibe coding を安全にする
   - 新しい関数を書いたら対応するテストも書く
