@@ -13,10 +13,56 @@ import {
 import { compressImage } from "./lib/compress";
 import { detectOutputFormat, mimeFor, extFor } from "./lib/output-format";
 import { shareFiles, downloadFile, isShareSupported } from "./lib/share";
-import type { FileItem } from "./lib/types";
+import type { FileItem, OutputFormat } from "./lib/types";
+
+/** iOS keeps a single decode/encode in flight (memory); other platforms run a small pool. */
+const CONCURRENCY = /iP(hone|ad|od)/i.test(navigator.userAgent) ? 1 : 3;
 
 const resetFiles = (): void => {
+  for (const f of files.value) {
+    if (f.thumbUrl) URL.revokeObjectURL(f.thumbUrl);
+  }
   files.value = [];
+};
+
+const compressOne = async (id: string): Promise<void> => {
+  const item = files.value.find((f) => f.id === id);
+  if (!item) return;
+
+  updateFile(id, { status: "processing", error: undefined });
+
+  const result = await compressImage(item.file, {
+    preset: preset.value,
+    outputFormat: item.outputFormat,
+    thumbnail: !item.thumbUrl,
+  });
+
+  if (result.ok) {
+    const { thumbBlob, ...compressResult } = result.value;
+    const patch: Partial<FileItem> = { status: "completed", result: compressResult };
+    if (thumbBlob) patch.thumbUrl = URL.createObjectURL(thumbBlob);
+    updateFile(id, patch);
+  } else {
+    updateFile(id, { status: "error", error: result.error, result: undefined });
+  }
+};
+
+/** Run `worker` over `ids` with at most `limit` in flight at once. */
+const runPool = async (
+  ids: string[],
+  worker: (id: string) => Promise<void>,
+  limit: number
+): Promise<void> => {
+  const queue = [...ids];
+  const lanes = Array.from(
+    { length: Math.min(limit, queue.length) },
+    async () => {
+      for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
+        await worker(next);
+      }
+    }
+  );
+  await Promise.all(lanes);
 };
 
 export const handleFiles = async (fileList: FileList): Promise<void> => {
@@ -28,21 +74,21 @@ export const handleFiles = async (fileList: FileList): Promise<void> => {
   }));
 
   addFiles(items);
+  await runPool(
+    items.map((i) => i.id),
+    compressOne,
+    CONCURRENCY
+  );
+};
 
-  for (const item of items) {
-    updateFile(item.id, { status: "processing" });
-
-    const result = await compressImage(item.file, {
-      preset: preset.value,
-      outputFormat: item.outputFormat,
-    });
-
-    if (result.ok) {
-      updateFile(item.id, { status: "completed", result: result.value });
-    } else {
-      updateFile(item.id, { status: "error", error: result.error });
-    }
-  }
+export const changeOutputFormat = async (
+  id: string,
+  format: OutputFormat
+): Promise<void> => {
+  const item = files.value.find((f) => f.id === id);
+  if (!item || item.outputFormat === format) return;
+  updateFile(id, { outputFormat: format });
+  await compressOne(id);
 };
 
 export const handleSave = async (): Promise<void> => {

@@ -21,4 +21,6 @@ export interface FileItem {
   status: ProcessingStatus;
   result?: CompressResult;
   error?: string;
+  /** Object URL of the input-image thumbnail. Created once per file, revoked on clear. */
+  thumbUrl?: string;
 }
