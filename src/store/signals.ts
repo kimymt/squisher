@@ -5,6 +5,8 @@ import type { Preset } from "../lib/presets";
 export const files = signal<FileItem[]>([]);
 export const preset = signal<Preset>("standard");
 export const skipLarger = signal<boolean>(true);
+/** Non-null while the last save attempt is showing an error/notice in the SaveBar. */
+export const saveError = signal<string | null>(null);
 
 export const totalOriginalSize = computed(() =>
   files.value.reduce((sum, f) => sum + f.file.size, 0)
@@ -38,4 +40,5 @@ export const updateFile = (id: string, patch: Partial<FileItem>): void => {
 
 export const addFiles = (newFiles: FileItem[]): void => {
   files.value = [...files.value, ...newFiles];
+  saveError.value = null;
 };

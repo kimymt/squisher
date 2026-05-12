@@ -4,6 +4,7 @@ import {
   totalCompressedSize,
   totalOriginalSize,
   skipLarger,
+  saveError,
 } from "../store/signals";
 import { handleSave } from "../app";
 
@@ -30,6 +31,7 @@ export const SaveBar = () => (
         サイズ増は保存スキップ
       </label>
     </div>
+    {saveError.value && <div class="save-error">{saveError.value}</div>}
     <button
       type="button"
       class="btn btn-primary btn-full"

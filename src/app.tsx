@@ -9,10 +9,11 @@ import {
   nextId,
   updateFile,
   saveableFiles,
+  saveError,
 } from "./store/signals";
 import { compressImage } from "./lib/compress";
 import { detectOutputFormat, mimeFor, extFor } from "./lib/output-format";
-import { shareFiles, downloadFile, isShareSupported } from "./lib/share";
+import { shareFiles, downloadFiles, isShareSupported } from "./lib/share";
 import type { FileItem, OutputFormat } from "./lib/types";
 
 /** iOS keeps a single decode/encode in flight (memory); other platforms run a small pool. */
@@ -91,34 +92,51 @@ export const changeOutputFormat = async (
   await compressOne(id);
 };
 
+/** `IMG_1234.jpeg` → `IMG_1234-squished.jpg`; re-saving stays idempotent. */
+const outputFileName = (item: FileItem): string => {
+  const baseName = item.file.name
+    .replace(/\.[^/.]+$/, "")
+    .replace(/-squished$/i, "");
+  return `${baseName}-squished.${extFor(item.outputFormat)}`;
+};
+
 export const handleSave = async (): Promise<void> => {
+  saveError.value = null;
   const items = saveableFiles.value;
   if (items.length === 0) return;
 
-  const outFiles = items.map((item) => {
-    const result = item.result!;
-    const baseName = item.file.name.replace(/\.[^/.]+$/, "");
-    const ext = extFor(item.outputFormat);
-    return new File([result.blob], `${baseName}-squished.${ext}`, {
-      type: mimeFor(item.outputFormat),
-    });
-  });
+  const outFiles = items.map(
+    (item) =>
+      new File([item.result!.blob], outputFileName(item), {
+        type: mimeFor(item.outputFormat),
+      })
+  );
 
-  if (isShareSupported()) {
-    const result = await shareFiles(outFiles);
-    if (result.outcome === "shared") {
-      resetFiles();
-    } else if (result.outcome === "cancelled") {
-      // ユーザーキャンセル: リストを維持して再共有可能に
-    } else {
-      alert(`保存に失敗しました: ${result.error}\nダウンロードに切り替えます。`);
-      outFiles.forEach((f) => downloadFile(f));
-      resetFiles();
-    }
-  } else {
-    outFiles.forEach((f) => downloadFile(f));
+  // No Web Share API (desktop browsers): direct download is reliable here.
+  if (!isShareSupported()) {
+    await downloadFiles(outFiles);
     resetFiles();
+    return;
   }
+
+  const result = await shareFiles(outFiles);
+  if (result.outcome === "shared") {
+    resetFiles();
+    return;
+  }
+  if (result.outcome === "cancelled") {
+    // ユーザーがキャンセル: リストを維持して再共有できるようにする
+    return;
+  }
+
+  // failed / unsupported-mid-flow: fall back to download, keep the list so the
+  // user can retry the share sheet. On iOS the download fallback is unreliable,
+  // so surface a notice rather than silently resetting.
+  saveError.value =
+    result.outcome === "unsupported"
+      ? "この端末では共有できませんでした。ダウンロードを試みます。"
+      : `共有に失敗しました（${result.error ?? "不明なエラー"}）。ダウンロードを試みます。`;
+  await downloadFiles(outFiles);
 };
 
 export const App = () => (

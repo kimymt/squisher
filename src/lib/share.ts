@@ -37,3 +37,14 @@ export const downloadFile = (file: File): void => {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
+
+const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Trigger downloads one at a time with a small gap — browsers throttle bursts. */
+export const downloadFiles = async (files: File[]): Promise<void> => {
+  for (let i = 0; i < files.length; i++) {
+    downloadFile(files[i]);
+    if (i < files.length - 1) await delay(250);
+  }
+};

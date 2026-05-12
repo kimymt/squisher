@@ -315,6 +315,16 @@
   font-size: 13px;
 }
 
+.save-error {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--danger);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 .switch {
   display: inline-flex;
   align-items: center;
