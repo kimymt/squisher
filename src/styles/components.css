@@ -360,6 +360,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
   margin-bottom: 12px;
   font-size: 13px;
   color: var(--muted);
@@ -367,6 +369,7 @@
 
 .toolbar-options .totals {
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .save-error {
