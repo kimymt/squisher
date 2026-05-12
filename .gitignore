@@ -7,3 +7,7 @@ dist/
 .vite/
 .claude/
 .gstack/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
