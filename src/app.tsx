@@ -2,6 +2,7 @@ import { Header } from "./components/Header";
 import { EmptyCard } from "./components/EmptyCard";
 import { FileRow } from "./components/FileRow";
 import { SaveBar } from "./components/SaveBar";
+import { InstallBanner } from "./components/InstallBanner";
 import {
   files,
   preset,
@@ -10,10 +11,12 @@ import {
   updateFile,
   saveableFiles,
   saveError,
+  showInstallBanner,
 } from "./store/signals";
 import { compressImage } from "./lib/compress";
 import { detectOutputFormat, mimeFor, extFor } from "./lib/output-format";
 import { shareFiles, downloadFiles, isShareSupported } from "./lib/share";
+import { shouldOfferInstall } from "./lib/install";
 import type { FileItem, OutputFormat } from "./lib/types";
 
 /** iOS keeps a single decode/encode in flight (memory); other platforms run a small pool. */
@@ -43,6 +46,10 @@ const compressOne = async (id: string): Promise<void> => {
     const patch: Partial<FileItem> = { status: "completed", result: compressResult };
     if (thumbBlob) patch.thumbUrl = URL.createObjectURL(thumbBlob);
     updateFile(id, patch);
+    // First successful compression on iOS Safari: offer "Add to Home Screen".
+    if (!showInstallBanner.value && shouldOfferInstall()) {
+      showInstallBanner.value = true;
+    }
   } else {
     updateFile(id, { status: "error", error: result.error, result: undefined });
   }
@@ -142,6 +149,7 @@ export const handleSave = async (): Promise<void> => {
 export const App = () => (
   <div class="app">
     <Header />
+    <InstallBanner />
     {files.value.length === 0 ? (
       <EmptyCard />
     ) : (

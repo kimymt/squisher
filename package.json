@@ -12,7 +12,8 @@
     "@preact/preset-vite": "^2.10.5",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "typescript": "^5.4.0",
-    "vite": "^6.4.2"
+    "vite": "^6.4.2",
+    "vite-plugin-pwa": "^1.3.0"
   },
   "dependencies": {
     "@preact/signals": "^2.9.0",

@@ -88,6 +88,60 @@
   }
 }
 
+/* "Add to Home Screen" hint (iOS Safari, shown after the first compression) */
+.install-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: var(--accent-soft);
+  border-radius: var(--radius-lg);
+}
+
+.install-banner-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.install-banner-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.install-banner-text {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.install-banner-glyph {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -4px;
+  margin: 0 2px;
+  color: var(--accent);
+}
+
+.install-banner-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin: -2px -4px 0 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.install-banner-close:active {
+  background: rgba(120, 120, 128, 0.16);
+}
+
 /* Empty card */
 .empty-card {
   display: block;

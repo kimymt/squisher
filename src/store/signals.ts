@@ -7,6 +7,8 @@ export const preset = signal<Preset>("standard");
 export const skipLarger = signal<boolean>(true);
 /** Non-null while the last save attempt is showing an error/notice in the SaveBar. */
 export const saveError = signal<string | null>(null);
+/** Whether the "Add to Home Screen" hint is currently visible. */
+export const showInstallBanner = signal<boolean>(false);
 
 export const totalOriginalSize = computed(() =>
   files.value.reduce((sum, f) => sum + f.file.size, 0)
