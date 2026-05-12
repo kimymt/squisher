@@ -17,6 +17,7 @@ import { compressImage } from "./lib/compress";
 import { detectOutputFormat, mimeFor, extFor } from "./lib/output-format";
 import { shareFiles, downloadFiles, isShareSupported } from "./lib/share";
 import { shouldOfferInstall } from "./lib/install";
+import type { Preset } from "./lib/presets";
 import type { FileItem, OutputFormat } from "./lib/types";
 
 /** iOS keeps a single decode/encode in flight (memory); other platforms run a small pool. */
@@ -97,6 +98,17 @@ export const changeOutputFormat = async (
   if (!item || item.outputFormat === format) return;
   updateFile(id, { outputFormat: format });
   await compressOne(id);
+};
+
+export const changePreset = async (next: Preset): Promise<void> => {
+  if (preset.value === next) return;
+  preset.value = next;
+  // Re-compress everything that already finished so the on-screen numbers
+  // reflect the new quality. (compressOne reads preset.value at call time.)
+  const ids = files.value
+    .filter((f) => f.status === "completed")
+    .map((f) => f.id);
+  await runPool(ids, compressOne, CONCURRENCY);
 };
 
 /** `IMG_1234.jpeg` → `IMG_1234-squished.jpg`; re-saving stays idempotent. */

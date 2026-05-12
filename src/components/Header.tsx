@@ -1,6 +1,6 @@
 import { preset, files } from "../store/signals";
 import { PRESETS, PRESET_ORDER, type Preset } from "../lib/presets";
-import { handleFiles } from "../app";
+import { handleFiles, changePreset } from "../app";
 
 export const Header = () => {
   const hasFiles = files.value.length > 0;
@@ -36,7 +36,7 @@ export const Header = () => {
             role="radio"
             aria-checked={preset.value === key}
             class={preset.value === key ? "seg-item active" : "seg-item"}
-            onClick={() => (preset.value = key)}
+            onClick={() => void changePreset(key)}
           >
             {PRESETS[key].label}
           </button>
