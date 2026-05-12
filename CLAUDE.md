@@ -17,6 +17,18 @@ In QA mode, flag any code that doesn't match DESIGN.md.
 - **線形プログレスバーは使用禁止**(円形スピナーのみ)
 - **Before/After比較スライダーは採用しない**(数値の遷移が主役)
 
+## Testing
+
+- 実行: `npm test`（`vitest run`）。テストは `test/` ディレクトリ。詳細は `TESTING.md`。
+- フレームワーク: Vitest + jsdom + @testing-library/preact。設定は `vitest.config.ts`（`vite.config.ts` とは別）。
+- 期待値:
+  - 100% カバレッジを目指す — テストが vibe coding を安全にする
+  - 新しい関数を書いたら対応するテストも書く
+  - バグを直したら回帰テストを書く
+  - エラーハンドリングを足したら、そのエラーを発火させるテストを書く
+  - 条件分岐（if/else, switch）を足したら、両方の経路をテストする
+  - 既存テストを落とすコードはコミットしない
+
 ## Skill routing
 
 When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
