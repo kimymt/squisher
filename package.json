@@ -1,5 +1,5 @@
 {
-  "name": "squisher-spike",
+  "name": "squisher",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "@preact/signals": "^2.9.0",
-    "browser-image-compression": "^2.0.2",
     "preact": "^10.29.1"
   }
 }
