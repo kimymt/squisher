@@ -17,6 +17,7 @@ import { compressImage } from "./lib/compress";
 import { detectOutputFormat, mimeFor, extFor } from "./lib/output-format";
 import { shareFiles, downloadFiles, isShareSupported } from "./lib/share";
 import { shouldOfferInstall } from "./lib/install";
+import { supportsHeicInput, isHeicFile } from "./lib/heic-support";
 import type { Preset } from "./lib/presets";
 import type { FileItem, OutputFormat } from "./lib/types";
 
@@ -74,20 +75,37 @@ const runPool = async (
   await Promise.all(lanes);
 };
 
+/**
+ * iOS / iPadOS Safari decodes HEIC to JPEG inside the file picker, so we
+ * never see HEIC there. On every other browser, HEIC reaches us as a
+ * `.heic` blob and `createImageBitmap` fails with a generic error. Flag
+ * those files up front so the user gets a useful message instead of
+ * "画像を読み込めませんでした" with no explanation.
+ */
+const heicSupported = supportsHeicInput();
+const HEIC_NOT_SUPPORTED_MESSAGE =
+  "このブラウザは HEIC に対応していません。iPhone の Safari でお試しください。";
+
 export const handleFiles = async (fileList: FileList): Promise<void> => {
-  const items: FileItem[] = Array.from(fileList).map((file) => ({
-    id: nextId(),
-    file,
-    outputFormat: detectOutputFormat(file),
-    status: "pending",
-  }));
+  const items: FileItem[] = Array.from(fileList).map((file) => {
+    const heicBlocked = !heicSupported && isHeicFile(file);
+    return {
+      id: nextId(),
+      file,
+      outputFormat: detectOutputFormat(file),
+      status: heicBlocked ? "error" : "pending",
+      ...(heicBlocked ? { error: HEIC_NOT_SUPPORTED_MESSAGE } : {}),
+    };
+  });
 
   addFiles(items);
-  await runPool(
-    items.map((i) => i.id),
-    compressOne,
-    CONCURRENCY
-  );
+
+  const pendingIds = items
+    .filter((i) => i.status === "pending")
+    .map((i) => i.id);
+  if (pendingIds.length > 0) {
+    await runPool(pendingIds, compressOne, CONCURRENCY);
+  }
 };
 
 export const changeOutputFormat = async (
