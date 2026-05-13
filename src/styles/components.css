@@ -96,13 +96,15 @@
   font-size: 14px;
 }
 
-.segmented .seg-item.active {
+.segmented .seg-item.active,
+.format-toggle .fmt-item.active {
   background: var(--segmented-selected);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
 }
 
 @media (prefers-color-scheme: dark) {
-  .segmented .seg-item.active {
+  .segmented .seg-item.active,
+  .format-toggle .fmt-item.active {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   }
 }
@@ -315,20 +317,14 @@
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+/* fmt-item active 時の色は seg-item と共通(上の合算ルール参照)。
+   fmt-item は inactive 時 muted、active で text に切り替わる差分のみ書く。 */
 .format-toggle .fmt-item.active {
-  background: var(--segmented-selected);
   color: var(--text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
 }
 
 .format-toggle .fmt-item:disabled {
   opacity: 0.45;
-}
-
-@media (prefers-color-scheme: dark) {
-  .format-toggle .fmt-item.active {
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  }
 }
 
 /* Badges */
