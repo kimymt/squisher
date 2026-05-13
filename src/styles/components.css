@@ -7,6 +7,19 @@
   flex-direction: column;
 }
 
+/* Desktop: present the 480px column as a centered card instead of
+   pasting it to the top-left with empty viewport around it. */
+@media (min-width: 768px) {
+  .app {
+    min-height: auto;
+    margin: var(--space-2xl) auto;
+    padding: var(--space-xl);
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-elevated);
+  }
+}
+
 /* Header */
 .product-header {
   display: flex;
