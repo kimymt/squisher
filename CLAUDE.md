@@ -31,6 +31,26 @@ In QA mode, flag any code that doesn't match DESIGN.md.
   - 条件分岐（if/else, switch）を足したら、両方の経路をテストする
   - 既存テストを落とすコードはコミットしない
 
+## Deploy Configuration (configured by /setup-deploy)
+- Platform: Cloudflare Pages（静的 PWA、`dist/` をホスト）
+- Production URL: `https://squisher.pages.dev`（`squisher` が pages.dev で使われていたら Cloudflare が自動で別名を割り当てる。カスタムドメインを後で当てても可）
+- Deploy workflow: 現状 auto-deploy なし（GitHub remote 未接続）。手動: `npm run build && npx wrangler pages deploy dist --project-name=squisher`。GitHub repo を作って Cloudflare Pages の Git 連携を繋げば push で auto-deploy（PR プレビュー付き）にできる。
+- Deploy status command: HTTP ヘルスチェック（CLI 不要 — `wrangler` は deploy にのみ使用）
+- Merge method: N/A（remote/PR なし、`master` 直 commit）。GitHub に上げたら squash 推奨。
+- Project type: web app（static PWA、ルート `/` のみ。クライアントルーティングなし → SPA fallback の `_redirects` は不要）
+- Post-deploy health check: `https://squisher.pages.dev/` が 200、`/manifest.webmanifest` が 200、`/sw.js` が 200
+
+### Custom deploy hooks
+- Pre-merge / pre-deploy: `npm test && npm run build`（任意で `npm run e2e` も — dev server を起動するので少し遅い）
+- Deploy trigger: `npx wrangler pages deploy dist --project-name=squisher`（Git 連携時は push で自動）
+- Deploy status: production URL を polling（新しいビルドが返るまで）
+- Health check: 上記の3 URL（200）
+
+### 初回のみの手動セットアップ
+1. `npx wrangler login` — ブラウザで Cloudflare アカウント認証
+2. `npm run build && npx wrangler pages deploy dist --project-name=squisher` — 初回はプロジェクトが無ければ作成を促される（`--production-branch=master` を付けてもよい）。完了すると実 URL（`*.pages.dev`）が表示される → 上の Production URL を実際の値に更新。
+3. （任意）GitHub repo を作成し（`gh repo create`）、Cloudflare Pages ダッシュボードで Git 連携 → ビルドコマンド `npm run build` / 出力ディレクトリ `dist` / production ブランチ `master` を設定すれば、以降は push で自動デプロイ。`.github/workflows/test.yml` の CI も回る。
+
 ## Skill routing
 
 When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
