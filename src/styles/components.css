@@ -454,7 +454,7 @@
 
 /* Button */
 .btn {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   padding: 13px 22px;
   border-radius: var(--radius-lg);
@@ -479,6 +479,5 @@
 
 .btn-full {
   width: 100%;
-  padding: 16px;
-  font-size: 16px;
+  padding: var(--space-md);
 }
