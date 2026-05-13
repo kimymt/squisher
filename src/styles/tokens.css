@@ -34,6 +34,22 @@
   --space-2xl: 32px;
   --space-3xl: 40px;
   --space-4xl: 48px;
+
+  /* Sub-spacing for rail gaps and micro-baseline corrections.
+     Below the 4px base scale — intentionally narrow, sub-pixel
+     structural details (segmented rail gaps, tight margin between
+     stacked text lines, switch thumb position offset). */
+  --space-3xs: 2px;
+
+  /* Typography scale (DESIGN.md §Typography)
+     Title: 28 / Label: 13-15 / Meta: 12-13 / Numeric mono: 13-14 */
+  --text-2xs: 12px;
+  --text-xs: 13px;
+  --text-sm: 14px;
+  --text-title: 28px;
+
+  /* Component sizes (illustrative tiles — empty-card icon, file-row thumb) */
+  --size-thumb: 56px;
 }
 
 @media (prefers-color-scheme: dark) {
