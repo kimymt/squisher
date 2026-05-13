@@ -1,0 +1,18 @@
+# Dependabot — keep SHA-pinned GitHub Actions current.
+# Actions in .github/workflows/*.yml are pinned to commit SHAs (not tags)
+# so Dependabot is the mechanism for bumping them to new patch/minor releases.
+# npm dependencies use package.json + npm audit; not managed here.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore(ci)
+      include: scope
+    labels:
+      - dependencies
+      - github-actions
