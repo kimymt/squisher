@@ -33,12 +33,13 @@ In QA mode, flag any code that doesn't match DESIGN.md.
 
 ## Deploy Configuration (configured by /setup-deploy)
 - Platform: Cloudflare Pages（静的 PWA、`dist/` をホスト）。GitHub repo: `https://github.com/kimymt/squisher`（public、ブランチ `master`）
-- Production URL: `https://squisher.pages.dev`（`squisher` が pages.dev で使われていたら Cloudflare が自動で別名を割り当てる。カスタムドメインを後で当てても可）
+- Production URL(主軸): `https://squisher.mymt.casa`(カスタムドメイン、Cloudflare Pages 経由)
+- Production URL(alias): `https://squisher.pages.dev`(CF 自動付与、こちらも生きている)
 - Deploy workflow: Cloudflare Pages の **Git 連携**（`master` への push で CF が `npm run build` → `dist/` を auto-deploy、PR ブランチはプレビュー）。※ CF ダッシュボードでの初回接続が未実施 — それまでの暫定デプロイは手動 `npm run build && npx wrangler pages deploy dist --project-name=squisher`。
 - Deploy status command: HTTP ヘルスチェック（`wrangler` は暫定の手動 deploy にのみ使用）
 - Merge method: `master` への push が production。PR を使うなら squash 推奨（CI `.github/workflows/test.yml` が push/PR で走る）。
 - Project type: web app（static PWA、ルート `/` のみ。クライアントルーティングなし → SPA fallback の `_redirects` は不要）
-- Post-deploy health check: `https://squisher.pages.dev/` が 200、`/manifest.webmanifest` が 200、`/sw.js` が 200
+- Post-deploy health check: `https://squisher.mymt.casa/` と `https://squisher.pages.dev/` 両方が 200、`/manifest.webmanifest` が 200、`/sw.js` が 200
 
 ### Custom deploy hooks
 - Pre-merge / pre-deploy: `npm test && npm run build`（任意で `npm run e2e` も — dev server を起動するので少し遅い。CI は全部やる）
