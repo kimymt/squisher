@@ -1,6 +1,7 @@
 import { preset, files } from "../store/signals";
 import { PRESETS, PRESET_ORDER, type Preset } from "../lib/presets";
 import { handleFiles, changePreset } from "../app";
+import { PlusGlyph } from "./PlusGlyph";
 
 export const Header = () => {
   const hasFiles = files.value.length > 0;
@@ -24,7 +25,9 @@ export const Header = () => {
                 }
               }}
             />
-            <span class="add-more-icon" aria-hidden="true">+</span>
+            <span class="add-more-icon">
+              <PlusGlyph size={20} />
+            </span>
           </label>
         )}
       </div>

@@ -61,10 +61,9 @@
 }
 
 .add-more-icon {
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1;
-  margin-top: -2px;
+  display: grid;
+  place-items: center;
+  line-height: 0;
 }
 
 /* Segmented control (full-width, tap-friendly) */
