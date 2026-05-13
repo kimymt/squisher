@@ -140,10 +140,9 @@
 
 .install-banner-close {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  margin: -2px -4px 0 0;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
   display: grid;
   place-items: center;
   font-size: 18px;
@@ -256,7 +255,7 @@
 }
 
 .file-thumb-placeholder {
-  background: linear-gradient(135deg, #A0BBC0, #4F6F7B);
+  background: var(--surface-2);
 }
 
 .file-info {
