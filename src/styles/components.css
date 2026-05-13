@@ -8,8 +8,14 @@
 }
 
 /* Desktop: present the 480px column as a centered card instead of
-   pasting it to the top-left with empty viewport around it. */
+   pasting it to the top-left with empty viewport around it.
+   body becomes a grid so the card lives at vertical-center too. */
 @media (min-width: 768px) {
+  body {
+    display: grid;
+    place-items: center;
+    /* min-height: 100dvh は base.css に既存 */
+  }
   .app {
     min-height: auto;
     margin: var(--space-2xl) auto;
@@ -17,6 +23,7 @@
     background: var(--surface);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-elevated);
+    width: 100%;
   }
 }
 
