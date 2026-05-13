@@ -335,8 +335,8 @@
   background: var(--accent-soft);
   color: var(--accent);
   border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   font-family: var(--font-mono);
   font-feature-settings: "tnum";
   flex-shrink: 0;
