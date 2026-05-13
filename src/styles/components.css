@@ -48,7 +48,7 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: var(--accent-soft);
   color: var(--accent);
   cursor: pointer;
@@ -72,7 +72,7 @@
   display: flex;
   width: 100%;
   background: var(--segmented-bg);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 3px;
   font-size: 14px;
   font-weight: 500;
@@ -83,7 +83,7 @@
   flex: 1;
   min-height: 40px;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   transition: background-color 0.15s ease;
   color: var(--text);
   font-family: inherit;
@@ -291,13 +291,13 @@
   padding: 2px;
   gap: 2px;
   background: var(--segmented-bg);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
 }
 
 .format-toggle .fmt-item {
   min-height: 32px;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
