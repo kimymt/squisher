@@ -1,6 +1,7 @@
 import type { FileItem, OutputFormat } from "../lib/types";
 import { changeOutputFormat } from "../app";
 import { Spinner } from "./Spinner";
+import { WarningGlyph } from "./StatusGlyph";
 
 const formatBytes = (n: number): string => {
   if (n < 1024) return `${n} B`;
@@ -28,7 +29,13 @@ export const FileRow = ({ item }: Props) => {
   const larger = item.result?.larger ?? false;
 
   return (
-    <div class={`file-row ${completed ? "completed" : ""} ${errored ? "errored" : ""}`}>
+    <div
+      class={`file-row ${completed ? "completed" : ""} ${errored ? "errored" : ""}`}
+      role={errored ? "alert" : undefined}
+      aria-label={
+        errored ? "失敗" : completed ? "完了" : busy ? "処理中" : undefined
+      }
+    >
       {item.thumbUrl ? (
         <img class="file-thumb" src={item.thumbUrl} alt="" />
       ) : (
@@ -67,7 +74,12 @@ export const FileRow = ({ item }: Props) => {
       {busy && <Spinner />}
       {reduction !== null && (
         <span class={`badge-reduction ${larger ? "warning" : ""}`}>
-          {larger ? `+${Math.abs(reduction)}% ⚠` : `-${reduction}%`}
+          {larger && (
+            <span class="badge-glyph">
+              <WarningGlyph size={11} />
+            </span>
+          )}
+          {larger ? `+${Math.abs(reduction)}%` : `-${reduction}%`}
         </span>
       )}
     </div>

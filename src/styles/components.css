@@ -338,6 +338,13 @@
 .badge-reduction.warning {
   background: rgba(255, 149, 0, 0.12);
   color: var(--warning);
+  gap: 4px;
+}
+
+.badge-glyph {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
 }
 
 /* Spinner */
