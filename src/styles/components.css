@@ -282,11 +282,11 @@
 }
 
 .format-toggle .fmt-item {
-  min-height: 26px;
-  padding: 4px 10px;
-  border-radius: 5px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 6px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--muted);
