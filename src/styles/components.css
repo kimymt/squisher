@@ -283,6 +283,10 @@
   color: var(--muted);
 }
 
+.file-sizes .arrow {
+  margin: 0 var(--space-2xs);
+}
+
 .file-error {
   font-size: 12px;
   color: var(--danger);

@@ -45,7 +45,7 @@ export const FileRow = ({ item }: Props) => {
         <div class="file-name">{item.file.name}</div>
         <div class="file-sizes mono">
           {formatBytes(item.file.size)}
-          <span class="arrow"> → </span>
+          <span class="arrow">→</span>
           {busy
             ? "…"
             : item.result
