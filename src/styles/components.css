@@ -13,20 +13,21 @@
 @media (min-width: 768px) {
   body {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-    /* min-height: 100dvh は base.css に既存 */
+    /* min-height: 100dvh は base.css に既存。
+       column flex なので main-axis = 垂直、justify-content: center で
+       .app が縦中央に配置される。cross-axis (水平) は default の
+       align-items: stretch のままで、.app が body 幅まで広がり、
+       .app の max-width: 480px と margin: auto で水平中央寄せされる。 */
   }
   .app {
     min-height: auto;
-    margin: var(--space-2xl);
+    margin: var(--space-2xl) auto;
     padding: var(--space-xl);
     background: var(--surface);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-elevated);
-    /* .app は max-width: 480px (上で定義) をそのまま使う。
-       flex 親の中で width: 100% を当てると grid のように縮まないので OK。 */
-    width: 100%;
   }
 }
 
