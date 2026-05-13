@@ -113,9 +113,9 @@
 .install-banner {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 16px;
-  padding: 12px 14px;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   background: var(--accent-soft);
   border-radius: var(--radius-lg);
 }
@@ -167,7 +167,7 @@
   display: block;
   background: var(--surface);
   border-radius: var(--radius-xl);
-  padding: 36px 20px;
+  padding: var(--space-2xl) var(--space-lg);
   text-align: center;
   box-shadow: var(--shadow-card);
   cursor: pointer;
@@ -182,9 +182,9 @@
 .empty-card .empty-icon {
   width: 56px;
   height: 56px;
-  margin: 0 auto 14px;
+  margin: 0 auto var(--space-sm);
   background: var(--accent-soft);
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
   color: var(--accent);
   display: grid;
   place-items: center;
@@ -195,7 +195,7 @@
 .empty-card .empty-label {
   font-size: 17px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-2xs);
 }
 
 .empty-card .empty-hint {
@@ -225,7 +225,7 @@
 }
 
 .file-row.completed {
-  padding-left: 16px;
+  padding-left: var(--space-md);
 }
 
 .file-row.completed::before {
@@ -249,7 +249,7 @@
 }
 
 .file-row.errored {
-  padding-left: 16px;
+  padding-left: var(--space-md);
 }
 
 .file-thumb {
@@ -331,7 +331,7 @@
 .badge-reduction {
   display: inline-flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: var(--space-2xs) var(--space-xs);
   background: var(--accent-soft);
   color: var(--accent);
   border-radius: var(--radius-sm);
@@ -345,7 +345,7 @@
 .badge-reduction.warning {
   background: rgba(255, 149, 0, 0.12);
   color: var(--warning);
-  gap: 4px;
+  gap: var(--space-2xs);
 }
 
 .badge-glyph {
@@ -373,12 +373,12 @@
 
 /* Save bar */
 .save-bar {
-  padding-top: 12px;
+  padding-top: var(--space-sm);
   border-top: 1px solid var(--divider);
   position: sticky;
   bottom: 0;
   background: var(--bg);
-  padding-bottom: 4px;
+  padding-bottom: var(--space-2xs);
 }
 
 .toolbar-options {
@@ -386,8 +386,8 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 12px;
-  margin-bottom: 12px;
+  gap: var(--space-2xs) var(--space-sm);
+  margin-bottom: var(--space-sm);
   font-size: 13px;
   color: var(--muted);
 }
@@ -398,8 +398,8 @@
 }
 
 .save-error {
-  margin-bottom: 12px;
-  padding: 8px 12px;
+  margin-bottom: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-md);
   background: rgba(255, 59, 48, 0.1);
   color: var(--danger);
@@ -421,7 +421,7 @@
   -webkit-appearance: none;
   width: 44px;
   height: 26px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(120, 120, 128, 0.32);
   position: relative;
   cursor: pointer;
