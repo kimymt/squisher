@@ -41,9 +41,9 @@ describe('<FileRow>', () => {
 
   it('shows a + warning badge when the result grew', () => {
     render(<FileRow item={item({ result: result(150_000, true) })} />);
-    const badge = screen.getByText('+50% ⚠');
+    const badge = screen.getByText('+50%');
     expect(badge).toBeInTheDocument();
-    expect(badge).toHaveClass('warning');
+    expect(badge.closest('.badge-reduction')).toHaveClass('warning');
   });
 
   it('renders the input-image thumbnail when present, a gradient placeholder otherwise', () => {
