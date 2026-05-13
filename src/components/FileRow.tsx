@@ -1,13 +1,8 @@
 import type { FileItem, OutputFormat } from "../lib/types";
 import { changeOutputFormat } from "../app";
+import { formatBytes } from "../lib/format";
 import { Spinner } from "./Spinner";
 import { WarningGlyph } from "./StatusGlyph";
-
-const formatBytes = (n: number): string => {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / 1024 / 1024).toFixed(2)} MB`;
-};
 
 const FORMAT_ORDER: OutputFormat[] = ["jpeg", "webp"];
 const FORMAT_LABELS: Record<OutputFormat, string> = {
