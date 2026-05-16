@@ -14,15 +14,13 @@ import {
   showInstallBanner,
 } from "./store/signals";
 import { compressImage } from "./lib/compress";
+import { computeConcurrency } from "./lib/concurrency";
 import { detectOutputFormat, mimeFor, extFor } from "./lib/output-format";
 import { shareFiles, downloadFiles, isShareSupported } from "./lib/share";
 import { shouldOfferInstall } from "./lib/install";
 import { supportsHeicInput, isHeicFile } from "./lib/heic-support";
 import type { Preset } from "./lib/presets";
 import type { FileItem, OutputFormat } from "./lib/types";
-
-/** iOS keeps a single decode/encode in flight (memory); other platforms run a small pool. */
-const CONCURRENCY = /iP(hone|ad|od)/i.test(navigator.userAgent) ? 1 : 3;
 
 const resetFiles = (): void => {
   for (const f of files.value) {
@@ -100,11 +98,10 @@ export const handleFiles = async (fileList: FileList): Promise<void> => {
 
   addFiles(items);
 
-  const pendingIds = items
-    .filter((i) => i.status === "pending")
-    .map((i) => i.id);
-  if (pendingIds.length > 0) {
-    await runPool(pendingIds, compressOne, CONCURRENCY);
+  const pendingItems = items.filter((i) => i.status === "pending");
+  if (pendingItems.length > 0) {
+    const pendingIds = pendingItems.map((i) => i.id);
+    await runPool(pendingIds, compressOne, computeConcurrency(pendingItems));
   }
 };
 
@@ -123,10 +120,9 @@ export const changePreset = async (next: Preset): Promise<void> => {
   preset.value = next;
   // Re-compress everything that already finished so the on-screen numbers
   // reflect the new quality. (compressOne reads preset.value at call time.)
-  const ids = files.value
-    .filter((f) => f.status === "completed")
-    .map((f) => f.id);
-  await runPool(ids, compressOne, CONCURRENCY);
+  const completed = files.value.filter((f) => f.status === "completed");
+  const ids = completed.map((f) => f.id);
+  await runPool(ids, compressOne, computeConcurrency(completed));
 };
 
 /** `IMG_1234.jpeg` → `IMG_1234-squished.jpg`; re-saving stays idempotent. */

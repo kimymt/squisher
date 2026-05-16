@@ -12,6 +12,8 @@ export interface CompressResult {
   width: number;
   height: number;
   larger: boolean;
+  /** Wall-clock duration of the compress call in ms. Present in dev mode + e2e. */
+  durationMs?: number;
 }
 
 export interface FileItem {

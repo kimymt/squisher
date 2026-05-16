@@ -50,6 +50,7 @@ export const compressImage = async (
   file: File,
   opts: CompressOptions
 ): Promise<Result<CompressOutput>> => {
+  const start = performance.now();
   let bitmap: ImageBitmap | undefined;
   let canvas: HTMLCanvasElement | undefined;
 
@@ -87,12 +88,23 @@ export const compressImage = async (
     const blob = await toBlob(canvas, mimeFor(opts.outputFormat), preset.quality);
     if (!blob) return err("圧縮に失敗しました");
 
+    const durationMs = performance.now() - start;
+    // Dev-mode only: surfaces timing on the console so QA can eyeball it
+    // without instrumentation. Production build (`import.meta.env.PROD`) skips.
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.debug(
+        `[compress] ${file.name} ${file.size}B -> ${blob.size}B in ${durationMs.toFixed(0)}ms`
+      );
+    }
+
     return ok({
       blob,
       width: w,
       height: h,
       larger: blob.size > file.size,
       thumbBlob,
+      durationMs,
     });
   } finally {
     bitmap?.close();
