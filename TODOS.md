@@ -48,8 +48,26 @@ Squisher の deferred なフォロー作業。
 
 - Cloudflare bot detection の `/cdn-cgi/content?id=...` 隠れリンク(default blue `#0000EE`)— プロダクト制御外、CF 設定で `Bot Fight Mode` を off にすれば消える可能性
 
-## Phase 6 候補(将来)
+## Phase 6 — Tier 1 圧縮スループット改善(2026-05-16 `/plan-eng-review` 完了)
 
-- Web Worker への画像処理移行(現状 main thread)
+### PR1(進行中)— main-thread dynamic concurrency
+- `src/lib/concurrency.ts` 新設、`computeConcurrency(files)` で iOS 1↔2 を入力 file.size に応じ動的選択(8 MB 超え=1、それ以外=2)
+- `src/app.tsx` の `CONCURRENCY` 定数を関数呼び出しへ置換
+- `src/lib/compress.ts` に timing 計装(`durationMs` を `CompressResult` に追加、dev mode 限定 console.log)
+- `test/concurrency.test.ts`(unit)+ `e2e/perf-budget.spec.ts`(10 ファイル < 4000 ms assert)
+- Plan: `~/.gstack/projects/PicsCompresser/likemike-main-tier1-worker-plan-20260516.md`
+- Acceptance: 10×12 MP standard preset で 実機 iPhone < 3.5 s、iPhone 8 + 高 preset で crash しない、UI 体感が許容可
+
+### PR2(deferred — PR1 結果次第)— Worker + OffscreenCanvas
+PR1 で UI 凍結が許容不可と判定された場合のみ実装。範囲は別 `/plan-eng-review` で再評価:
+- Blob は Transferable でないので `[blob]` 渡しは不可(outside voice T1)
+- iOS 16.4 早期版 `convertToBlob` の runtime probe 必要
+- `compress-core.ts` 抽出は YAGNI か否か再判定(outside voice T4)
+- visibilitychange 30s redispatch policy は cancellation token と「late result discard」が必要(outside voice T5)
+- memory model(per-thread vs per-tab heap)の実機検証が PR1 で取れる
+
+### 既存の Phase 6 候補(他)
 - 動画圧縮(MVP スコープ外)
 - iCloud / Files アプリ連携(現状は input + share のみ)
+- Tier 2: サムネ即表示の UI 改善
+- Tier 4: preset 全 3 種を初回並行生成
