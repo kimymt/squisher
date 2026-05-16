@@ -143,6 +143,25 @@ test('cancelling the share keeps the list; sharing again clears it', async ({ pa
   expect(consoleErrors).toEqual([]);
 });
 
+test('Tier 2: thumbnails appear independently of the compress queue', async ({ page, consoleErrors }) => {
+  // generateThumbnail fires in parallel with the compress queue; the row's
+  // .file-thumb img is set as soon as the 112px decode finishes, well before
+  // the full compress lands. Verify with a tight timeout that thumbs don't
+  // wait on compress completion.
+  await page.goto('/');
+  await fileInput(page).setInputFiles([JPG, PNG]);
+
+  // Tight timeout: thumb generation is ~10-30 ms per file via the native
+  // resizeWidth downscaler, far faster than the full compress.
+  await expect(page.locator('.file-thumb:not(.file-thumb-placeholder)')).toHaveCount(2, {
+    timeout: 1000,
+  });
+
+  // Compress still settles cleanly afterwards.
+  await expect(page.locator('.file-row.completed')).toHaveCount(2, { timeout: 10_000 });
+  expect(consoleErrors).toEqual([]);
+});
+
 test('install banner appears after the first compression (iPhone UA) and dismissal persists', async ({ page, consoleErrors }) => {
   await page.goto('/');
   await expect(page.locator('.install-banner')).toHaveCount(0);

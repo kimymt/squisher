@@ -15,6 +15,7 @@ import {
 } from "./store/signals";
 import { compressImage } from "./lib/compress";
 import { computeConcurrency } from "./lib/concurrency";
+import { generateThumbnail } from "./lib/thumbnail";
 import { detectOutputFormat, mimeFor, extFor } from "./lib/output-format";
 import { shareFiles, downloadFiles, isShareSupported } from "./lib/share";
 import { shouldOfferInstall } from "./lib/install";
@@ -38,20 +39,38 @@ const compressOne = async (id: string): Promise<void> => {
   const result = await compressImage(item.file, {
     preset: preset.value,
     outputFormat: item.outputFormat,
-    thumbnail: !item.thumbUrl,
   });
 
   if (result.ok) {
-    const { thumbBlob, ...compressResult } = result.value;
-    const patch: Partial<FileItem> = { status: "completed", result: compressResult };
-    if (thumbBlob) patch.thumbUrl = URL.createObjectURL(thumbBlob);
-    updateFile(id, patch);
+    updateFile(id, { status: "completed", result: result.value });
     // First successful compression on iOS Safari: offer "Add to Home Screen".
     if (!showInstallBanner.value && shouldOfferInstall()) {
       showInstallBanner.value = true;
     }
   } else {
     updateFile(id, { status: "error", error: result.error, result: undefined });
+  }
+};
+
+/**
+ * Fire thumbnail generation for newly-added files in parallel. Each thumb
+ * lands on its row independently as it resolves; non-fatal failures (corrupt
+ * source, etc.) leave the placeholder in place. Decoupled from the compress
+ * queue so the user sees a rich list immediately, even on iOS where the
+ * compress queue is sequential.
+ */
+const startThumbnails = (items: FileItem[]): void => {
+  for (const item of items) {
+    if (item.thumbUrl) continue;
+    void generateThumbnail(item.file).then((blob) => {
+      if (!blob) return;
+      // Only attach the thumbUrl if the row still exists (file may have been
+      // cleared mid-flight by resetFiles).
+      if (!files.value.some((f) => f.id === item.id)) {
+        return;
+      }
+      updateFile(item.id, { thumbUrl: URL.createObjectURL(blob) });
+    });
   }
 };
 
@@ -99,6 +118,10 @@ export const handleFiles = async (fileList: FileList): Promise<void> => {
   addFiles(items);
 
   const pendingItems = items.filter((i) => i.status === "pending");
+  // Kick off thumbnails in parallel with the compress queue: native
+  // downscaler decodes a 112px bitmap in ~10-30 ms, so all 10 rows light up
+  // with a thumb well before the first compress finishes. Fire-and-forget.
+  startThumbnails(pendingItems);
   if (pendingItems.length > 0) {
     const pendingIds = pendingItems.map((i) => i.id);
     await runPool(pendingIds, compressOne, computeConcurrency(pendingItems));
