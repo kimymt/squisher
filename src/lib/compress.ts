@@ -4,19 +4,10 @@ import type { CompressResult, OutputFormat } from "./types";
 import { mimeFor } from "./output-format";
 
 const MAX_INPUT_PIXELS = 64_000_000;
-/** Longest-side px for the row thumbnail (56pt slot @ 2x DPR). */
-const THUMB_LONG_SIDE = 112;
 
 export interface CompressOptions {
   preset: Preset;
   outputFormat: OutputFormat;
-  /** Generate a small thumbnail from the source image (skip on re-compress). */
-  thumbnail?: boolean;
-}
-
-export interface CompressOutput extends CompressResult {
-  /** Present only when `thumbnail` was requested and generation succeeded. */
-  thumbBlob: Blob | null;
 }
 
 const toBlob = (
@@ -26,30 +17,10 @@ const toBlob = (
 ): Promise<Blob | null> =>
   new Promise((resolve) => canvas.toBlob((b) => resolve(b), type, quality));
 
-const makeThumbnail = async (bitmap: ImageBitmap): Promise<Blob | null> => {
-  const longSide = Math.max(bitmap.width, bitmap.height);
-  const scale = longSide > THUMB_LONG_SIDE ? THUMB_LONG_SIDE / longSide : 1;
-  const w = Math.max(1, Math.round(bitmap.width * scale));
-  const h = Math.max(1, Math.round(bitmap.height * scale));
-
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  try {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    return await toBlob(canvas, "image/jpeg", 0.7);
-  } finally {
-    canvas.width = 0;
-    canvas.height = 0;
-  }
-};
-
 export const compressImage = async (
   file: File,
   opts: CompressOptions
-): Promise<Result<CompressOutput>> => {
+): Promise<Result<CompressResult>> => {
   const start = performance.now();
   let bitmap: ImageBitmap | undefined;
   let canvas: HTMLCanvasElement | undefined;
@@ -67,8 +38,6 @@ export const compressImage = async (
         `画像が大きすぎます (${(inputPixels / 1_000_000).toFixed(1)}Mピクセル)`
       );
     }
-
-    const thumbBlob = opts.thumbnail ? await makeThumbnail(bitmap) : null;
 
     const preset = PRESETS[opts.preset];
     const longSide = Math.max(bitmap.width, bitmap.height);
@@ -103,7 +72,6 @@ export const compressImage = async (
       width: w,
       height: h,
       larger: blob.size > file.size,
-      thumbBlob,
       durationMs,
     });
   } finally {
