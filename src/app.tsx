@@ -3,6 +3,7 @@ import { EmptyCard } from "./components/EmptyCard";
 import { FileRow } from "./components/FileRow";
 import { SaveBar } from "./components/SaveBar";
 import { InstallBanner } from "./components/InstallBanner";
+import { AppCredits } from "./components/AppCredits";
 import {
   files,
   preset,
@@ -200,7 +201,10 @@ export const App = () => (
     <Header />
     <InstallBanner />
     {files.value.length === 0 ? (
-      <EmptyCard />
+      <>
+        <EmptyCard />
+        <AppCredits />
+      </>
     ) : (
       <>
         <div class="file-list">

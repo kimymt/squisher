@@ -2,8 +2,23 @@ import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { VitePWA } from 'vite-plugin-pwa';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+// Build-time injection of the package version so AppCredits can render
+// it without a runtime import of package.json.
+const pkg = JSON.parse(
+  readFileSync(
+    resolve(dirname(fileURLToPath(import.meta.url)), 'package.json'),
+    'utf-8'
+  )
+) as { version: string };
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [
     preact(),
     basicSsl(),

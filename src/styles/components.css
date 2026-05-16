@@ -226,6 +226,48 @@
   color: var(--muted);
 }
 
+/* App credits — document footer shown only in the empty state.
+   EmptyCard above has margin-bottom: auto, which absorbs remaining
+   vertical space and pushes this footer to the bottom of the .app
+   flex column. Row layout: version label sits next to the GitHub
+   icon link, center-aligned. */
+.app-credits {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  color: var(--muted);
+  font-size: var(--text-2xs);
+  line-height: 1.4;
+}
+
+.app-credits-link {
+  /* Icon link defaults to --accent so the link affordance reads at a
+     glance — the version label stays --muted, and the accent picks up
+     the eye without text underline. iOS-style press feedback: opacity
+     dip on :active. 44pt min tap target per HIG, visible icon at 20px
+     centered in the wrapper. */
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  transition: opacity 0.15s ease;
+}
+
+.app-credits-link:active {
+  opacity: 0.5;
+}
+
+.app-credits-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* File list */
 .file-list {
   display: flex;
