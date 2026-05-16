@@ -48,26 +48,26 @@ Squisher の deferred なフォロー作業。
 
 - Cloudflare bot detection の `/cdn-cgi/content?id=...` 隠れリンク(default blue `#0000EE`)— プロダクト制御外、CF 設定で `Bot Fight Mode` を off にすれば消える可能性
 
-## Phase 6 — Tier 1 圧縮スループット改善(2026-05-16 `/plan-eng-review` 完了)
+## Phase 6 — 圧縮スループット改善(2026-05-16)
 
-### PR1(進行中)— main-thread dynamic concurrency
-- `src/lib/concurrency.ts` 新設、`computeConcurrency(files)` で iOS 1↔2 を入力 file.size に応じ動的選択(8 MB 超え=1、それ以外=2)
-- `src/app.tsx` の `CONCURRENCY` 定数を関数呼び出しへ置換
-- `src/lib/compress.ts` に timing 計装(`durationMs` を `CompressResult` に追加、dev mode 限定 console.log)
-- `test/concurrency.test.ts`(unit)+ `e2e/perf-budget.spec.ts`(10 ファイル < 4000 ms assert)
-- Plan: `~/.gstack/projects/PicsCompresser/likemike-main-tier1-worker-plan-20260516.md`
-- Acceptance: 10×12 MP standard preset で 実機 iPhone < 3.5 s、iPhone 8 + 高 preset で crash しない、UI 体感が許容可
+### ✅ Done — Tier 1 PR1: main-thread dynamic concurrency(PR #6 merged)
+- `src/lib/concurrency.ts`、iOS で file.size > 8 MB なら 1、それ以外 2、非 iOS 3
+- 実機 QA で UI 凍結「許容可」判定 → Tier 1 PR2(Worker)は不要に確定
 
-### PR2(deferred — PR1 結果次第)— Worker + OffscreenCanvas
-PR1 で UI 凍結が許容不可と判定された場合のみ実装。範囲は別 `/plan-eng-review` で再評価:
-- Blob は Transferable でないので `[blob]` 渡しは不可(outside voice T1)
-- iOS 16.4 早期版 `convertToBlob` の runtime probe 必要
-- `compress-core.ts` 抽出は YAGNI か否か再判定(outside voice T4)
-- visibilitychange 30s redispatch policy は cancellation token と「late result discard」が必要(outside voice T5)
-- memory model(per-thread vs per-tab heap)の実機検証が PR1 で取れる
+### ✅ Done — Tier 2: eager thumbnails(PR #7 merged)
+- `src/lib/thumbnail.ts`、選択直後に全 thumb を `createImageBitmap(file, { resizeWidth: 112 })` で並列生成
+- compress.ts から thumb 生成ロジックを除去、関心の分離
+
+### 🟡 進行中 — Tier 3: `createImageBitmap` の resize オプションで decode 高速化
+- `createImageBitmap(file, { resizeWidth: preset.maxDimension, resizeQuality: 'high' })` で 1 段 pixel pass へ
+- 期待: per file ~10-15% 短縮(12 MP standard で ~580ms → ~500ms)、特に 48 MP source で大幅短縮
 
 ### 既存の Phase 6 候補(他)
 - 動画圧縮(MVP スコープ外)
 - iCloud / Files アプリ連携(現状は input + share のみ)
-- Tier 2: サムネ即表示の UI 改善
-- Tier 4: preset 全 3 種を初回並行生成
+
+### 不採用となった候補
+- **Tier 1 PR2(Worker + OffscreenCanvas)**: PR1 の実機検証で UI 凍結許容可 → 不要、将来 50 MP+ 標準化 or 100+ 枚バッチが要件になったら再検討
+- **Tier 4(preset 全 3 種を初回並行生成)**: 必要性が薄い、スキップ
+- **Tier 5(モジュール preload + critical CSS)**: 初回起動のみ ~50ms 改善、PWA 化後は無感、スキップ
+- **Tier 6(File オブジェクトを完了時に pre-build)**: Save タップで ~10ms 削るが体感不可、スキップ
