@@ -10,7 +10,7 @@ import { handleSave } from "../app";
 import { formatBytes } from "../lib/format";
 
 export const SaveBar = () => (
-  <footer class="save-bar" role="contentinfo" aria-label="保存">
+  <footer class="save-bar" aria-label="保存">
     <div class="toolbar-options">
       <span class="totals mono">
         合計: {formatBytes(totalOriginalSize.value)} → {formatBytes(totalCompressedSize.value)}
