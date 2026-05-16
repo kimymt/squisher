@@ -32,25 +32,20 @@ In QA mode, flag any code that doesn't match DESIGN.md.
   - 既存テストを落とすコードはコミットしない
 
 ## Deploy Configuration (configured by /setup-deploy)
-- Platform: Cloudflare Pages（静的 PWA、`dist/` をホスト）。GitHub repo: `https://github.com/kimymt/squisher`（public、ブランチ `master`）
+- Platform: Cloudflare Pages(静的 PWA、`dist/` をホスト)。GitHub repo: `https://github.com/kimymt/squisher`(public、デフォルトブランチ `main`、branch protection で PR 必須)
 - Production URL(主軸): `https://squisher.mymt.casa`(カスタムドメイン、Cloudflare Pages 経由)
 - Production URL(alias): `https://squisher.pages.dev`(CF 自動付与、こちらも生きている)
-- Deploy workflow: Cloudflare Pages の **Git 連携**（`master` への push で CF が `npm run build` → `dist/` を auto-deploy、PR ブランチはプレビュー）。※ CF ダッシュボードでの初回接続が未実施 — それまでの暫定デプロイは手動 `npm run build && npx wrangler pages deploy dist --project-name=squisher`。
-- Deploy status command: HTTP ヘルスチェック（`wrangler` は暫定の手動 deploy にのみ使用）
-- Merge method: `master` への push が production。PR を使うなら squash 推奨（CI `.github/workflows/test.yml` が push/PR で走る）。
+- Deploy workflow: Cloudflare Pages の **Git 連携**(feature ブランチで PR → CI green → squash merge to `main` → CF が `npm run build` → `dist/` を auto-deploy)。PR ブランチには自動でプレビューデプロイ。merge → 30〜90 秒で本番反映。
+- Deploy status command: HTTP ヘルスチェック
+- Merge method: 直接 push は protection rule で不可。**feature ブランチ → PR → CI green → squash merge to `main`** が production。CI `.github/workflows/test.yml` が push/PR で走る。
 - Project type: web app（static PWA、ルート `/` のみ。クライアントルーティングなし → SPA fallback の `_redirects` は不要）
 - Post-deploy health check: `https://squisher.mymt.casa/` と `https://squisher.pages.dev/` 両方が 200、`/manifest.webmanifest` が 200、`/sw.js` が 200
 
 ### Custom deploy hooks
 - Pre-merge / pre-deploy: `npm test && npm run build`（任意で `npm run e2e` も — dev server を起動するので少し遅い。CI は全部やる）
-- Deploy trigger: `master` への push（Git 連携接続後は自動）。暫定: `npx wrangler pages deploy dist --project-name=squisher`
+- Deploy trigger: PR を `main` に squash merge(Git 連携で auto-deploy)
 - Deploy status: production URL を polling（新しいビルドが返るまで）
 - Health check: 上記の3 URL（200）
-
-### 残りの手動セットアップ
-1. Cloudflare ダッシュボード → Workers & Pages → Create → Pages → **Connect to Git** → `kimymt/squisher` を選択 → ビルドコマンド `npm run build` / 出力ディレクトリ `dist` / production ブランチ `master`。以降は `master` push で auto-deploy + PR プレビュー。
-2. デプロイ後に出る実 URL（`*.pages.dev`）を上の Production URL に反映。
-3. （暫定 / 任意）連携前に試したいときは: `npx wrangler login` → `npm run build && npx wrangler pages deploy dist --project-name=squisher`。
 
 ## Skill routing
 

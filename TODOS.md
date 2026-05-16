@@ -42,7 +42,7 @@ Squisher の deferred なフォロー作業。
 - F-021 `--accent-soft` 0.08 → 0.12
 - F-005 残: components.css の scale 内 magic number を全 token 化
 
-`master` 11 commits + bugfix v1/v2 で本番反映済み。
+`main` 11 commits + bugfix v1/v2 で本番反映済み。
 
 ## Deferred(third-party)
 
