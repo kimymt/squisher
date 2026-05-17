@@ -58,9 +58,9 @@ Squisher の deferred なフォロー作業。
 - `src/lib/thumbnail.ts`、選択直後に全 thumb を `createImageBitmap(file, { resizeWidth: 112 })` で並列生成
 - compress.ts から thumb 生成ロジックを除去、関心の分離
 
-### 🟡 進行中 — Tier 3: `createImageBitmap` の resize オプションで decode 高速化
-- `createImageBitmap(file, { resizeWidth: preset.maxDimension, resizeQuality: 'high' })` で 1 段 pixel pass へ
-- 期待: per file ~10-15% 短縮(12 MP standard で ~580ms → ~500ms)、特に 48 MP source で大幅短縮
+### ✅ Done — Tier 3: `createImageBitmap` の resize オプションで decode 高速化(PR #8 merged)
+- `probeDimensions()` で source 寸法を取得、downscale 必要時のみ `resizeWidth` ヒントを渡す
+- 48 MP で bitmap allocation 195 MB → 19.6 MB(memory ~90% 削減)、`MAX_INPUT_BYTES = 100MB` の sanity cap に置換
 
 ### 既存の Phase 6 候補(他)
 - 動画圧縮(MVP スコープ外)
@@ -71,3 +71,23 @@ Squisher の deferred なフォロー作業。
 - **Tier 4(preset 全 3 種を初回並行生成)**: 必要性が薄い、スキップ
 - **Tier 5(モジュール preload + critical CSS)**: 初回起動のみ ~50ms 改善、PWA 化後は無感、スキップ
 - **Tier 6(File オブジェクトを完了時に pre-build)**: Save タップで ~10ms 削るが体感不可、スキップ
+
+## Phase 7 — 体感速度改善 / streaming UX(2026-05-17)
+
+### ✅ Done — Approach C: streaming share UX(PR pending、v1.1.0)
+- `sharedIds` signal + `markShared()` helper + `allShared` / `processingCount` computed
+- handleSave 4 outcome を `markShared(snapshot) + 行残し` に統一(snapshot pattern で async race 回避)
+- SaveBar 5 state matrix + 「他 N 件処理中」caption + aria-live
+- FileRow 保存済バッジ(`--accent` 地・白チェック + 「保存済」、`role="status"`)
+- DESIGN.md decisions log 追記
+- 78 → 98 vitest + 10 → 12 e2e、build +1.23 KiB
+
+### 🟡 保留 — Approach A: Worker + OffscreenCanvas
+- Phase 7 C の実生活ドッグフード 3 回後に判断(office-hours 課題)
+- 使用シーンが生まれたら `/plan-eng-review` で計画 → 着手
+- 生まれなければ Squisher は v1.1.x で完成扱い
+
+### P3 候補 — フォローアップ TODO
+
+- **「クリア」ボタン** — streaming 化後、保存済みファイルの Blob 参照が滞留(最大 130 MB / iOS heap 200-380 MB)。SaveBar の「全て保存済み」状態のときにのみ表示する Clear button を後で追加。`resetFiles()` を再導入する単位の作業。**Trigger:** 実機 OOM 観察、または 20-30 ファイル一括操作シーンが生まれたら
+- **iOS transient activation 制約検証** — Web Share API は連続呼び出しで NoActivationError を起こす可能性。streaming で再共有を何度もする UX なので実機で挙動を確認する。**Trigger:** iPhone 実機で 2 回目の保存ボタン押下が無反応 / エラーになる挙動を観察したら

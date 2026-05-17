@@ -210,3 +210,4 @@ body {
 | 2026-05-13 | 保存失敗の通知はインライン(`--danger` 文字 + `rgba(255,59,48,0.1)` 地、`--radius-md`、SaveBar の保存ボタン上) | JS の `alert()` を排除。ブロッキングしない、iOS の inline error 流。`larger` 警告と同じ色系統 |
 | 2026-05-13 | ホーム画面追加バナーは `--accent-soft` 地のカード + iOS 共有グリフ(box+up-arrow の SVG)+ × | 「Apple純正」軸に沿った静かな促進。ヘッダー直下、初回圧縮後にのみ出現、dismiss は永続 |
 | 2026-05-13 | アプリアイコン: `#30694B` 地に白の "S"、角丸は焼き込まない | iOS / 各ランチャーが独自マスクを当てる。maskable 用は "S" を小さくしてセーフゾーン内に。MVP は自前生成、プロ制作は後日 |
+| 2026-05-17 | Streaming share UX: SaveBar 5 state matrix(0/N/0 〜 0/0/N)、保存済バッジ、`他 N 件処理中` caption | `/plan-design-review` + `/plan-eng-review` の結果。1 件目完了で保存ボタンが既に enable になっていた事実を活かし、視覚化と二重保存防止 (`sharedIds` signal + `markShared()` helper) を追加。Web Share / download いずれの成功時も `files` リストを保持(旧 `resetFiles` は撤廃)、保存済みは `--accent` 地の白チェックバッジで per-row 表示。Apple Files app の増分保存 UX に整合 |

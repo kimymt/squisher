@@ -1,8 +1,9 @@
 import type { FileItem, OutputFormat } from "../lib/types";
 import { changeOutputFormat } from "../app";
+import { sharedIds } from "../store/signals";
 import { formatBytes } from "../lib/format";
 import { Spinner } from "./Spinner";
-import { WarningGlyph } from "./StatusGlyph";
+import { CheckGlyph, WarningGlyph } from "./StatusGlyph";
 
 const FORMAT_ORDER: OutputFormat[] = ["jpeg", "webp"];
 const FORMAT_LABELS: Record<OutputFormat, string> = {
@@ -18,6 +19,7 @@ export const FileRow = ({ item }: Props) => {
   const completed = item.status === "completed";
   const errored = item.status === "error";
   const busy = item.status === "pending" || item.status === "processing";
+  const shared = sharedIds.value.has(item.id);
   const reduction = item.result
     ? Math.round((1 - item.result.blob.size / item.file.size) * 100)
     : null;
@@ -75,6 +77,14 @@ export const FileRow = ({ item }: Props) => {
             </span>
           )}
           {larger ? `+${Math.abs(reduction)}%` : `-${reduction}%`}
+        </span>
+      )}
+      {shared && (
+        <span class="badge-shared" role="status" aria-label="保存済">
+          <span class="badge-glyph">
+            <CheckGlyph size={11} />
+          </span>
+          保存済
         </span>
       )}
     </div>
