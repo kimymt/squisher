@@ -13,6 +13,7 @@ import {
   saveableFiles,
   saveError,
   showInstallBanner,
+  markShared,
 } from "./store/signals";
 import { compressImage } from "./lib/compress";
 import { computeConcurrency } from "./lib/concurrency";
@@ -23,13 +24,6 @@ import { shouldOfferInstall } from "./lib/install";
 import { supportsHeicInput, isHeicFile } from "./lib/heic-support";
 import type { Preset } from "./lib/presets";
 import type { FileItem, OutputFormat } from "./lib/types";
-
-const resetFiles = (): void => {
-  for (const f of files.value) {
-    if (f.thumbUrl) URL.revokeObjectURL(f.thumbUrl);
-  }
-  files.value = [];
-};
 
 const compressOne = async (id: string): Promise<void> => {
   const item = files.value.find((f) => f.id === id);
@@ -65,8 +59,8 @@ const startThumbnails = (items: FileItem[]): void => {
     if (item.thumbUrl) continue;
     void generateThumbnail(item.file).then((blob) => {
       if (!blob) return;
-      // Only attach the thumbUrl if the row still exists (file may have been
-      // cleared mid-flight by resetFiles).
+      // Only attach the thumbUrl if the row still exists. The row may have been
+      // removed (future Clear button) or the file id may have been recycled.
       if (!files.value.some((f) => f.id === item.id)) {
         return;
       }
@@ -162,6 +156,12 @@ export const handleSave = async (): Promise<void> => {
   const items = saveableFiles.value;
   if (items.length === 0) return;
 
+  // Snapshot the ids being shared NOW. If files complete during the share
+  // dialog, saveableFiles will grow — but we only mark the original set as
+  // shared. Without this snapshot, share resolve would race with compression
+  // completion and double-count new files as "saved" without ever sharing them.
+  const sharedIdSnapshot = items.map((item) => item.id);
+
   const outFiles = items.map(
     (item) =>
       new File([item.result!.blob], outputFileName(item), {
@@ -172,28 +172,31 @@ export const handleSave = async (): Promise<void> => {
   // No Web Share API (desktop browsers): direct download is reliable here.
   if (!isShareSupported()) {
     await downloadFiles(outFiles);
-    resetFiles();
+    markShared(sharedIdSnapshot);
     return;
   }
 
   const result = await shareFiles(outFiles);
   if (result.outcome === "shared") {
-    resetFiles();
+    markShared(sharedIdSnapshot);
     return;
   }
   if (result.outcome === "cancelled") {
-    // ユーザーがキャンセル: リストを維持して再共有できるようにする
+    // ユーザーがキャンセル: snapshot は破棄。リストは維持されたまま、
+    // 同じファイルを再度押せば再共有できる。
     return;
   }
 
-  // failed / unsupported-mid-flow: fall back to download, keep the list so the
-  // user can retry the share sheet. On iOS the download fallback is unreliable,
-  // so surface a notice rather than silently resetting.
+  // failed / unsupported-mid-flow: fall back to download, mark as shared
+  // (the user did receive the files via download even though share failed).
+  // Show an inline notice — on iOS the download fallback is unreliable, so the
+  // user should know what happened.
   saveError.value =
     result.outcome === "unsupported"
       ? "この端末では共有できませんでした。ダウンロードを試みます。"
       : `共有に失敗しました（${result.error ?? "不明なエラー"}）。ダウンロードを試みます。`;
   await downloadFiles(outFiles);
+  markShared(sharedIdSnapshot);
 };
 
 export const App = () => (
