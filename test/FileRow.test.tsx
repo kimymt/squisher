@@ -7,6 +7,7 @@ vi.mock('../src/app', () => ({
 }));
 
 import { FileRow } from '../src/components/FileRow';
+import { sharedIds, markShared } from '../src/store/signals';
 import type { FileItem, CompressResult } from '../src/lib/types';
 
 const result = (out: number, larger = false): CompressResult => ({
@@ -25,7 +26,10 @@ const item = (over: Partial<FileItem> = {}): FileItem => ({
   ...over,
 });
 
-beforeEach(() => changeOutputFormat.mockClear());
+beforeEach(() => {
+  changeOutputFormat.mockClear();
+  sharedIds.value = new Set();
+});
 afterEach(cleanup);
 
 describe('<FileRow>', () => {
@@ -84,5 +88,19 @@ describe('<FileRow>', () => {
     render(<FileRow item={item({ id: 'f9', outputFormat: 'jpeg' })} />);
     fireEvent.click(screen.getByRole('radio', { name: 'WebP' }));
     expect(changeOutputFormat).toHaveBeenCalledWith('f9', 'webp');
+  });
+
+  it('does NOT render the 保存済 badge by default (unshared file)', () => {
+    const { container } = render(<FileRow item={item()} />);
+    expect(container.querySelector('.badge-shared')).toBeNull();
+  });
+
+  it('renders the 保存済 badge with role="status" + aria-label when the file id is in sharedIds', () => {
+    markShared(['f1']);
+    render(<FileRow item={item()} />);
+    const badge = screen.getByRole('status', { name: '保存済' });
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveClass('badge-shared');
+    expect(badge).toHaveTextContent('保存済');
   });
 });

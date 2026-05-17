@@ -422,6 +422,29 @@
   gap: var(--space-2xs);
 }
 
+/* "保存済" badge — sits next to badge-reduction once a file has been shared.
+   Solid --accent fill (vs --accent-soft for the reduction badge) for visual
+   weight differentiation, white text for contrast. DESIGN.md §Color compliant. */
+.badge-shared {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin-left: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-xs);
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+  animation: fade-in 0.25s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 .badge-glyph {
   display: inline-flex;
   align-items: center;
@@ -481,6 +504,15 @@
   color: var(--danger);
   font-size: var(--text-xs);
   line-height: 1.35;
+}
+
+/* Caption below the save button: "他 N 件処理中" / "N 件処理中".
+   Aria-live region announces changes (count decrements) to screen readers. */
+.save-caption {
+  margin-top: var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-align: center;
 }
 
 .switch {
