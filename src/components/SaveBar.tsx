@@ -9,7 +9,7 @@ import {
   allShared,
 } from "../store/signals";
 import { handleSave } from "../app";
-import { formatBytes } from "../lib/format";
+import { formatBytesPair } from "../lib/format";
 
 /**
  * SaveBar state matrix (driven by saveableFiles / processingCount / allShared):
@@ -42,8 +42,8 @@ export const SaveBar = () => {
   return (
     <footer class="save-bar" aria-label="保存">
       <div class="toolbar-options">
-        <span class="totals mono">
-          合計: {formatBytes(totalOriginalSize.value)} → {formatBytes(totalCompressedSize.value)}
+        <span class="totals mono" aria-label="合計サイズ">
+          {formatBytesPair(totalOriginalSize.value, totalCompressedSize.value)}
         </span>
         <label class="switch">
           <input

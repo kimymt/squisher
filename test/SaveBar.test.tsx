@@ -37,7 +37,8 @@ afterEach(cleanup);
 describe('<SaveBar>', () => {
   it('shows zeroed totals and a disabled save button when nothing is saveable', () => {
     render(<SaveBar />);
-    expect(screen.getByText(/合計:/)).toHaveTextContent('合計: 0 B → 0 B');
+    // Pair-form: same unit ("B") gets deduped → "0 → 0 B".
+    expect(screen.getByLabelText('合計サイズ')).toHaveTextContent('0 → 0 B');
     const btn = screen.getByRole('button', { name: /写真に保存/ });
     expect(btn).toBeDisabled();
     expect(btn).toHaveTextContent('写真に保存(0)');
@@ -46,7 +47,7 @@ describe('<SaveBar>', () => {
   it('counts saveable files and sums the totals', () => {
     files.value = [completed('a', 100, 40), completed('b', 200, 50)];
     render(<SaveBar />);
-    expect(screen.getByText(/合計:/)).toHaveTextContent('合計: 300 B → 90 B');
+    expect(screen.getByLabelText('合計サイズ')).toHaveTextContent('300 → 90 B');
     const btn = screen.getByRole('button', { name: /写真に保存/ });
     expect(btn).not.toBeDisabled();
     expect(btn).toHaveTextContent('写真に保存(2)');
@@ -56,7 +57,8 @@ describe('<SaveBar>', () => {
     files.value = [completed('small', 100, 40), completed('grew', 100, 180)];
     render(<SaveBar />);
     expect(screen.getByRole('button', { name: /写真に保存/ })).toHaveTextContent('写真に保存(1)');
-    expect(screen.getByText(/合計:/)).toHaveTextContent('合計: 200 B → 140 B'); // grew counted as its original 100
+    // grew counted as its original 100 since skipLarger=true → total 140 B
+    expect(screen.getByLabelText('合計サイズ')).toHaveTextContent('200 → 140 B');
 
     fireEvent.click(screen.getByRole('checkbox'));
     expect(skipLarger.value).toBe(false);
