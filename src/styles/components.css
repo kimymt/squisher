@@ -470,14 +470,19 @@
   }
 }
 
-/* Save bar */
+/* Save bar — sticky to viewport bottom (viewport-fit=cover includes the iOS
+   home-indicator zone). The .app wrapper's safe-area padding is bypassed by
+   position:sticky's bottom:0 because sticky offsets from the scroll port,
+   not the containing block's padding edge. So we re-apply safe-area-inset
+   here to keep the save button clear of the home indicator on iPhones
+   without a physical home button. */
 .save-bar {
   padding-top: var(--space-sm);
   border-top: 1px solid var(--divider);
   position: sticky;
   bottom: 0;
   background: var(--bg);
-  padding-bottom: var(--space-2xs);
+  padding-bottom: calc(var(--space-2xs) + env(safe-area-inset-bottom));
 }
 
 .toolbar-options {
