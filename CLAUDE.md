@@ -1,6 +1,6 @@
 # Squisher
 
-iPhone向けPWA画像圧縮アプリ。iPhone 写真(HEIC由来 JPEG / 直接 JPEG / PNG) → JPEG/WebP、完全ローカル処理(サーバーなし)、3段階品質(変更で全ファイル再圧縮)、行ごとに JPEG/WebP 切替、複数ファイル一括処理(iOS は直列1 / 非iOS は最大3並列)、サイズ増スキップ、Web Share API で「写真」に保存(失敗時はインライン通知 + ダウンロード fallback)、PWA(ホーム画面追加バナー)。
+iPhone向けPWA画像圧縮アプリ。iPhone 写真(HEIC由来 JPEG / 直接 JPEG / PNG) → JPEG/WebP、完全ローカル処理(サーバーなし)、3段階品質(変更で全ファイル再圧縮)、行ごとに JPEG/WebP 切替、複数ファイル一括処理(iOS は最大2並列、8MB超ファイルで直列1 / 非iOS は最大3並列。判定ロジックは `src/lib/concurrency.ts`)、サイズ増スキップ、Web Share API で「写真」に保存(失敗時はインライン通知 + ダウンロード fallback)、PWA(ホーム画面追加バナー)。
 
 スタック: Vite 6 + TS + Preact + @preact/signals、圧縮は native Canvas `toBlob`(依存ゼロ)、PWA は `vite-plugin-pwa`。実装プランと進捗は `PLAN.md`、概要と開発手順は `README.md`。
 
