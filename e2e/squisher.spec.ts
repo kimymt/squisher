@@ -47,8 +47,12 @@ test('golden path — select, compress, save (download fallback)', async ({ page
   ]);
   expect(download.suggestedFilename()).toBe('sample-squished.jpg');
 
-  // list resets after a successful save
-  await expect(page.locator('.empty-card')).toBeVisible();
+  // Streaming UX: list KEEPS after save (Phase 7 C), 保存済 badge appears,
+  // and SaveBar button transitions to "全て保存済み" + disabled.
+  await expect(page.locator('.empty-card')).toHaveCount(0);
+  await expect(page.locator('.file-row')).toHaveCount(1);
+  await expect(page.locator('.badge-shared')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: /全て保存済み/ })).toBeDisabled();
   expect(consoleErrors).toEqual([]);
 });
 
@@ -117,7 +121,7 @@ test('size-increase skip toggle defaults on and is toggleable', async ({ page, c
   expect(consoleErrors).toEqual([]);
 });
 
-test('cancelling the share keeps the list; sharing again clears it', async ({ page, consoleErrors }) => {
+test('cancelling the share keeps the list with no shared badge; sharing again marks all', async ({ page, consoleErrors }) => {
   await page.addInitScript(() => {
     let calls = 0;
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
@@ -137,9 +141,14 @@ test('cancelling the share keeps the list; sharing again clears it', async ({ pa
   await page.getByRole('button', { name: /写真に保存/ }).click();
   await expect(page.locator('.file-row')).toHaveCount(1); // cancel keeps the list
   await expect(page.locator('.save-error')).toHaveCount(0); // no error notice on cancel
+  await expect(page.locator('.badge-shared')).toHaveCount(0); // and NO 保存済 badge after cancel
+  await expect(page.getByRole('button', { name: /写真に保存\(1\)/ })).toBeEnabled(); // can retry
 
   await page.getByRole('button', { name: /写真に保存/ }).click();
-  await expect(page.locator('.empty-card')).toBeVisible(); // share success clears it
+  // Phase 7 C: share success now KEEPS the list + adds 保存済 badge.
+  await expect(page.locator('.file-row')).toHaveCount(1);
+  await expect(page.locator('.badge-shared')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: /全て保存済み/ })).toBeDisabled();
   expect(consoleErrors).toEqual([]);
 });
 
@@ -159,6 +168,59 @@ test('Tier 2: thumbnails appear independently of the compress queue', async ({ p
 
   // Compress still settles cleanly afterwards.
   await expect(page.locator('.file-row.completed')).toHaveCount(2, { timeout: 10_000 });
+  expect(consoleErrors).toEqual([]);
+});
+
+test('streaming share — multi-file: every row gets 保存済 badge, button switches to 全て保存済み', async ({ page, consoleErrors }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: () => Promise.resolve(),
+    });
+  });
+  await page.goto('/');
+  await uploadAndSettle(page, JPG, PNG);
+
+  // Both files saveable. SaveBar shows count, no caption (no processing).
+  await expect(page.getByRole('button', { name: /写真に保存\(2\)/ })).toBeEnabled();
+  await expect(page.locator('.save-caption')).toHaveCount(0);
+
+  await page.getByRole('button', { name: /写真に保存/ }).click();
+
+  // After share: both rows keep, both get 保存済 badge, button → "全て保存済み".
+  await expect(page.locator('.file-row')).toHaveCount(2);
+  await expect(page.locator('.badge-shared')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: /全て保存済み/ })).toBeDisabled();
+  expect(consoleErrors).toEqual([]);
+});
+
+test('streaming share — incremental save: add file after first save, second save marks only the new file', async ({ page, consoleErrors }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: () => Promise.resolve(),
+    });
+  });
+  await page.goto('/');
+  await uploadAndSettle(page, JPG);
+
+  // First save: 1 file shared.
+  await page.getByRole('button', { name: /写真に保存/ }).click();
+  await expect(page.locator('.badge-shared')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: /全て保存済み/ })).toBeDisabled();
+
+  // Add another file. SaveBar should re-enable to "写真に保存(1)" (just the new one).
+  await fileInput(page).setInputFiles([PNG]);
+  await expect(page.locator('.file-row.completed, .file-row.errored')).toHaveCount(2, { timeout: 20_000 });
+  await expect(page.getByRole('button', { name: /写真に保存\(1\)/ })).toBeEnabled();
+  await expect(page.locator('.badge-shared')).toHaveCount(1); // only the first one still marked
+
+  // Second save: now both shared.
+  await page.getByRole('button', { name: /写真に保存/ }).click();
+  await expect(page.locator('.badge-shared')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: /全て保存済み/ })).toBeDisabled();
   expect(consoleErrors).toEqual([]);
 });
 
