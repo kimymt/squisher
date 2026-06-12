@@ -57,6 +57,27 @@ const probeDimensions = (
   });
 };
 
+/**
+ * Decide the decode-time resize hint from probed source dimensions.
+ *
+ * The hint must constrain the LONG side: for portrait sources that is the
+ * height, so passing `resizeWidth: maxDimension` would decode a bitmap
+ * ~78% larger than needed (e.g. 3024×4032 → 2560×3413 instead of
+ * 1920×2560) and force a second resample in drawImage. No hint when the
+ * source already fits or dimensions are unknown — the canvas-side scale
+ * handles those without upscaling.
+ */
+export const resizeHintFor = (
+  dims: { width: number; height: number } | null,
+  maxDimension: number
+): ImageBitmapOptions | undefined => {
+  if (!dims) return undefined;
+  if (Math.max(dims.width, dims.height) <= maxDimension) return undefined;
+  return dims.height > dims.width
+    ? { resizeHeight: maxDimension, resizeQuality: "high" }
+    : { resizeWidth: maxDimension, resizeQuality: "high" };
+};
+
 export const compressImage = async (
   file: File,
   opts: CompressOptions
@@ -79,15 +100,11 @@ export const compressImage = async (
     // For small files, skip the probe entirely — default decode will
     // produce a native-size bitmap and the canvas-side scale (which
     // ends up as scale=1) handles the rest without upscaling.
+    // A failed probe is non-fatal: Image() supports a narrower format set
+    // than createImageBitmap, so fall back to a full-size decode (no hint)
+    // and let createImageBitmap below report genuinely broken files.
     const sourceDims =
       file.size > PROBE_SKIP_BYTES ? await probeDimensions(file) : null;
-    if (file.size > PROBE_SKIP_BYTES && !sourceDims) {
-      return err("画像を読み込めませんでした");
-    }
-
-    const needsResize =
-      sourceDims !== null &&
-      Math.max(sourceDims.width, sourceDims.height) > preset.maxDimension;
 
     // Tier 3: resize during decode for sources that need downscaling.
     // The browser uses its native downscaler (Safari has hw-accelerated
@@ -98,9 +115,7 @@ export const compressImage = async (
     try {
       bitmap = await createImageBitmap(
         file,
-        needsResize
-          ? { resizeWidth: preset.maxDimension, resizeQuality: "high" }
-          : undefined
+        resizeHintFor(sourceDims, preset.maxDimension)
       );
     } catch {
       return err("画像を読み込めませんでした");
