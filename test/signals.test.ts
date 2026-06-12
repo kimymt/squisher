@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   files,
   skipLarger,
@@ -14,6 +14,7 @@ import {
   updateFile,
   addFiles,
   markShared,
+  clearFiles,
 } from '../src/store/signals';
 import type { FileItem } from '../src/lib/types';
 
@@ -220,5 +221,52 @@ describe('allShared', () => {
     updateFile('b', { status: 'processing', result: undefined });
     markShared(['a']);
     expect(allShared.value).toBe(false);
+  });
+});
+
+describe('thumbUrl lifecycle (object URL revocation)', () => {
+  // jsdom does not implement URL.revokeObjectURL — install a spy so the
+  // store's revocation calls are observable.
+  const revoke = vi.fn();
+  beforeEach(() => {
+    revoke.mockClear();
+    (URL as unknown as { revokeObjectURL: (url: string) => void }).revokeObjectURL =
+      revoke;
+  });
+
+  it('updateFile revokes the previous thumbUrl when replacing it', () => {
+    addFiles([{ ...completed('a', 100, 40), thumbUrl: 'blob:old' }]);
+    updateFile('a', { thumbUrl: 'blob:new' });
+    expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:old');
+    expect(files.value[0].thumbUrl).toBe('blob:new');
+  });
+
+  it('updateFile does not revoke when the patch leaves thumbUrl untouched', () => {
+    addFiles([{ ...completed('a', 100, 40), thumbUrl: 'blob:keep' }]);
+    updateFile('a', { status: 'processing', result: undefined });
+    expect(revoke).not.toHaveBeenCalled();
+    expect(files.value[0].thumbUrl).toBe('blob:keep');
+  });
+
+  it('updateFile does not revoke when re-assigning the same thumbUrl', () => {
+    addFiles([{ ...completed('a', 100, 40), thumbUrl: 'blob:same' }]);
+    updateFile('a', { thumbUrl: 'blob:same' });
+    expect(revoke).not.toHaveBeenCalled();
+  });
+
+  it('clearFiles revokes every thumbUrl and resets the session state', () => {
+    addFiles([
+      { ...completed('a', 100, 40), thumbUrl: 'blob:a' },
+      completed('b', 100, 40), // thumb not generated yet — must not throw
+    ]);
+    markShared(['a']);
+    saveError.value = '前回の保存に失敗';
+
+    clearFiles();
+
+    expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:a');
+    expect(files.value).toEqual([]);
+    expect(sharedIds.value.size).toBe(0);
+    expect(saveError.value).toBeNull();
   });
 });
