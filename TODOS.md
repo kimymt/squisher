@@ -89,5 +89,5 @@ Squisher の deferred なフォロー作業。
 
 ### P3 候補 — フォローアップ TODO
 
-- **「クリア」ボタン** — streaming 化後、保存済みファイルの Blob 参照が滞留(最大 130 MB / iOS heap 200-380 MB)。SaveBar の「全て保存済み」状態のときにのみ表示する Clear button を後で追加。`resetFiles()` を再導入する単位の作業。**Trigger:** 実機 OOM 観察、または 20-30 ファイル一括操作シーンが生まれたら
+- **「クリア」ボタン** — streaming 化後、保存済みファイルの Blob 参照が滞留(最大 130 MB / iOS heap 200-380 MB)。SaveBar の「全て保存済み」状態のときにのみ表示する Clear button を後で追加。store 側のプリミティブは実装済み: `clearFiles()`(`src/store/signals.ts`、thumbUrl の revoke 込み)— UI はこれを呼ぶだけ。**Trigger:** 実機 OOM 観察、または 20-30 ファイル一括操作シーンが生まれたら
 - **iOS transient activation 制約検証** — Web Share API は連続呼び出しで NoActivationError を起こす可能性。streaming で再共有を何度もする UX なので実機で挙動を確認する。**Trigger:** iPhone 実機で 2 回目の保存ボタン押下が無反応 / エラーになる挙動を観察したら

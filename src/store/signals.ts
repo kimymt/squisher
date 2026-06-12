@@ -67,12 +67,40 @@ export const allShared = computed(
 let idCounter = 0;
 export const nextId = (): string => `f${++idCounter}`;
 
+/** Release a row's thumbnail object URL. No-op for rows without one. */
+const revokeThumb = (url: string | undefined): void => {
+  if (url) URL.revokeObjectURL(url);
+};
+
 export const updateFile = (id: string, patch: Partial<FileItem>): void => {
-  files.value = files.value.map((f) => (f.id === id ? { ...f, ...patch } : f));
+  files.value = files.value.map((f) => {
+    if (f.id !== id) return f;
+    // Replacing a row's thumbUrl orphans the old object URL — revoke it
+    // here so no caller can leak one by overwriting.
+    if (patch.thumbUrl !== undefined && f.thumbUrl && f.thumbUrl !== patch.thumbUrl) {
+      revokeThumb(f.thumbUrl);
+    }
+    return { ...f, ...patch };
+  });
 };
 
 export const addFiles = (newFiles: FileItem[]): void => {
   files.value = [...files.value, ...newFiles];
+  saveError.value = null;
+};
+
+/**
+ * Drop every row and release per-row resources (thumbnail object URLs,
+ * and with them the retained result blobs once rows are gone).
+ *
+ * 将来の「クリア」ボタン(TODOS.md P3)は必ずこれを呼ぶこと —
+ * `files.value = []` で直接空にすると thumbUrl が revoke されず、
+ * blob がセッション終了まで滞留する。
+ */
+export const clearFiles = (): void => {
+  for (const f of files.value) revokeThumb(f.thumbUrl);
+  files.value = [];
+  sharedIds.value = new Set();
   saveError.value = null;
 };
 

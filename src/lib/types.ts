@@ -23,6 +23,10 @@ export interface FileItem {
   status: ProcessingStatus;
   result?: CompressResult;
   error?: string;
-  /** Object URL of the input-image thumbnail. Created once per file, revoked on clear. */
+  /**
+   * Object URL of the input-image thumbnail. Owned by the store: replacing
+   * it via updateFile revokes the old URL, and clearFiles() revokes all of
+   * them when rows are dropped. Never overwrite or remove it elsewhere.
+   */
   thumbUrl?: string;
 }
