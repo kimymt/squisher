@@ -48,6 +48,15 @@ Squisher の deferred なフォロー作業。
 
 - Cloudflare bot detection の `/cdn-cgi/content?id=...` 隠れリンク(default blue `#0000EE`)— プロダクト制御外、CF 設定で `Bot Fight Mode` を off にすれば消える可能性
 
+### 既知の相互作用: 厳格 CSP × Cloudflare エッジ注入(2026-06-13、PR #16 後に判明)
+
+`public/_headers` の厳格 CSP(`script-src 'self'`)は、Cloudflare がエッジで HTML に差し込む**インラインスクリプトと両立しない**。CF のエッジ注入は CSP より後段で行われるため、ビルド成果物が無垢でも本番ではブロックされる。
+
+- **Web Analytics(`beacon.min.js` + インライン)**: ゾーン設定で auto-injection を **off 済み** → 解消。
+- **Bot Fight Mode / JavaScript Detections のインライン bootstrap**(`window.__CF$cv$params = {r:'<RayID>', …}`): **ON のまま維持**。BFM はゾーン(`mymt.casa`)単位でしか切れず、他ホストに影響するため off にできない。注入されるインラインの中身は Ray ID 入りでリクエストごとに変わる → **CSP hash 許可は不可能**、`'unsafe-inline'` を足す以外に通す手はない。
+- **判断: 現状維持**。ブロックされるのは CF のボット判定 JS だけで、外部 `/cdn-cgi/.../main.js` は same-origin なので `'self'` で読める。アプリ本体・SW・サムネ・圧縮・保存はすべて正常。コンソールに残る CSP エラー1件は cosmetic として許容する(`'unsafe-inline'` で防御を緩めるよりエラーを残す方を選ぶ)。
+- **将来 BFM を専用ゾーンに分離 or JS Detections の独立トグルが使えるようになったら**、注入が止まりコンソールもクリーンになる。それまではこのエラーは「CSP が意図どおり第三者注入を弾いている」証拠として無視してよい。
+
 ## Phase 6 — 圧縮スループット改善(2026-05-16)
 
 ### ✅ Done — Tier 1 PR1: main-thread dynamic concurrency(PR #6 merged)

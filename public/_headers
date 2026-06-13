@@ -1,3 +1,11 @@
+# Strict CSP for a fully-local static PWA (no runtime network, no inline
+# script/style of our own). Known interaction: Cloudflare injects inline
+# scripts at the edge (Web Analytics, Bot Fight Mode / JS Detections) AFTER
+# this header is applied, so script-src 'self' blocks them. Web Analytics is
+# turned off in the zone; Bot Fight Mode stays on (zone-wide, shared with
+# other hosts) and its per-request inline bootstrap is blocked by design —
+# that single console CSP error is expected, not a regression. Do NOT add
+# 'unsafe-inline' to silence it. See TODOS.md "既知の相互作用".
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; worker-src 'self'; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
