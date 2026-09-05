@@ -31,10 +31,22 @@ const compressOne = (id: string): Promise<void> => scheduleImage(async () => {
 
   updateFile(id, { status: "processing", error: undefined });
 
-  const result = await compressImage(item.file, {
-    preset: preset.value,
-    outputFormat: item.outputFormat,
-  });
+  // The quality preset can change while this file is mid-encode (the
+  // segmented control stays enabled during processing, and changePreset
+  // only re-queues files that are already "completed"). Re-read the live
+  // preset after each encode and re-run until they match — otherwise the
+  // row would keep an output at the old quality while the UI claims the
+  // new one. outputFormat cannot race: FileRow disables the toggle while
+  // the row is busy.
+  let usedPreset: Preset;
+  let result: Awaited<ReturnType<typeof compressImage>>;
+  do {
+    usedPreset = preset.value;
+    result = await compressImage(item.file, {
+      preset: usedPreset,
+      outputFormat: item.outputFormat,
+    });
+  } while (result.ok && usedPreset !== preset.value);
 
   if (result.ok) {
     updateFile(id, { status: "completed", result: result.value });

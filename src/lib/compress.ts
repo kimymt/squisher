@@ -17,6 +17,17 @@ const toBlob = (
 ): Promise<Blob | null> =>
   new Promise((resolve) => canvas.toBlob((b) => resolve(b), type, quality));
 
+export const resizeHintFor = (
+  dims: { width: number; height: number } | null,
+  maxDimension: number
+): ImageBitmapOptions | undefined => {
+  if (!dims) return undefined;
+  if (Math.max(dims.width, dims.height) <= maxDimension) return undefined;
+  return dims.height > dims.width
+    ? { resizeHeight: maxDimension, resizeQuality: "high" }
+    : { resizeWidth: maxDimension, resizeQuality: "high" };
+};
+
 export const compressImage = async (
   file: File,
   opts: CompressOptions
@@ -29,13 +40,10 @@ export const compressImage = async (
 
   try {
     const sourceDims = await validateImage(file);
-    const scaleHint = Math.min(1, preset.maxDimension / Math.max(sourceDims.width, sourceDims.height));
     try {
       bitmap = await createImageBitmap(
         file,
-        scaleHint < 1
-          ? { resizeWidth: Math.max(1, Math.round(sourceDims.width * scaleHint)), resizeQuality: "high" }
-          : undefined
+        resizeHintFor(sourceDims, preset.maxDimension)
       );
     } catch {
       return err("画像を読み込めませんでした");
