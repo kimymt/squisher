@@ -25,8 +25,10 @@ vi.mock('../src/lib/compress', () => ({
   ),
 }));
 
+vi.mock('../src/lib/thumbnail', () => ({ generateThumbnail: vi.fn(async () => null) }));
+
 import { handleFiles, changePreset } from '../src/app';
-import { files, preset } from '../src/store/signals';
+import { files, preset, saveError } from '../src/store/signals';
 
 const fileList = (...names: string[]): FileList =>
   names.map(
@@ -57,4 +59,17 @@ describe('Regression ISSUE-001 — quality preset re-compresses completed files'
     await changePreset('standard');
     expect(files.value[0].result).toBe(before);
   });
+});
+
+it('rejects excess batch count without retaining files', async () => {
+  await handleFiles(fileList(...Array.from({length:51}, (_, i) => `${i}.jpg`)));
+  expect(files.value).toHaveLength(0);
+  expect(saveError.value).toContain('50枚');
+});
+it('rejects cumulative batch bytes before decoding', async () => {
+  const big = new File(['x'], 'large.jpg');
+  Object.defineProperty(big, 'size', {value: 201 * 1024 * 1024});
+  await handleFiles([big] as unknown as FileList);
+  expect(files.value).toHaveLength(0);
+  expect(saveError.value).toContain('200MB');
 });

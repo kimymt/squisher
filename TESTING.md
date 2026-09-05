@@ -15,7 +15,7 @@
 ```bash
 npm test           # vitest run — ユニット + コンポーネント（CI 用、一度実行して終了）
 npm run test:watch # vitest — ウォッチモード
-npm run e2e        # playwright test — E2E（dev server を自動起動 or 再利用）
+npm run e2e        # 本番ビルド後にE2E（dev server を自動起動 or 再利用）
 ```
 
 ## レイヤー
@@ -44,3 +44,5 @@ npm run e2e        # playwright test — E2E（dev server を自動起動 or 再
 - セットアップ/ティアダウン: 共有モジュール状態（`files` シグナル等）は `beforeEach` でリセット。`navigator` / `localStorage` のオーバーライドは `afterEach` で戻す。
 - テストにシークレット・API キーを import しない。
 - `expect(x).toBeDefined()` で済ませない。コードが**何をするか**をアサートする。
+
+セキュリティ回帰: `test/image-input.test.ts` はデコード前の制限、`e2e/security.spec.ts` は本番ビルドのCSP・オフライン起動・巨大画像の拒否を確認します。`npm audit --audit-level=low` は開発依存を含めてCIで実行します。
