@@ -16,7 +16,7 @@ import {
   markShared,
 } from "./store/signals";
 import { compressImage } from "./lib/compress";
-import { computeConcurrency } from "./lib/concurrency";
+import { scheduleImage, MAX_FILES, MAX_TOTAL_BYTES } from "./lib/image-input";
 import { generateThumbnail } from "./lib/thumbnail";
 import { detectOutputFormat, mimeFor, extFor } from "./lib/output-format";
 import { shareFiles, downloadFiles, isShareSupported } from "./lib/share";
@@ -25,7 +25,7 @@ import { supportsHeicInput, isHeicFile } from "./lib/heic-support";
 import type { Preset } from "./lib/presets";
 import type { FileItem, OutputFormat } from "./lib/types";
 
-const compressOne = async (id: string): Promise<void> => {
+const compressOne = (id: string): Promise<void> => scheduleImage(async () => {
   const item = files.value.find((f) => f.id === id);
   if (!item) return;
 
@@ -50,6 +50,10 @@ const compressOne = async (id: string): Promise<void> => {
 
   if (result.ok) {
     updateFile(id, { status: "completed", result: result.value });
+    if (!item.thumbUrl) {
+      const blob = await generateThumbnail(item.file);
+      if (blob) updateFile(id, { thumbUrl: URL.createObjectURL(blob) });
+    }
     // First successful compression on iOS Safari: offer "Add to Home Screen".
     if (!showInstallBanner.value && shouldOfferInstall()) {
       showInstallBanner.value = true;
@@ -57,47 +61,7 @@ const compressOne = async (id: string): Promise<void> => {
   } else {
     updateFile(id, { status: "error", error: result.error, result: undefined });
   }
-};
-
-/**
- * Fire thumbnail generation for newly-added files in parallel. Each thumb
- * lands on its row independently as it resolves; non-fatal failures (corrupt
- * source, etc.) leave the placeholder in place. Decoupled from the compress
- * queue so the user sees a rich list immediately, even on iOS where the
- * compress queue is sequential.
- */
-const startThumbnails = (items: FileItem[]): void => {
-  for (const item of items) {
-    if (item.thumbUrl) continue;
-    void generateThumbnail(item.file).then((blob) => {
-      if (!blob) return;
-      // Only attach the thumbUrl if the row still exists. The row may have been
-      // removed (future Clear button) or the file id may have been recycled.
-      if (!files.value.some((f) => f.id === item.id)) {
-        return;
-      }
-      updateFile(item.id, { thumbUrl: URL.createObjectURL(blob) });
-    });
-  }
-};
-
-/** Run `worker` over `ids` with at most `limit` in flight at once. */
-const runPool = async (
-  ids: string[],
-  worker: (id: string) => Promise<void>,
-  limit: number
-): Promise<void> => {
-  const queue = [...ids];
-  const lanes = Array.from(
-    { length: Math.min(limit, queue.length) },
-    async () => {
-      for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
-        await worker(next);
-      }
-    }
-  );
-  await Promise.all(lanes);
-};
+});
 
 /**
  * iOS / iPadOS Safari decodes HEIC to JPEG inside the file picker, so we
@@ -111,6 +75,12 @@ const HEIC_NOT_SUPPORTED_MESSAGE =
   "このブラウザは HEIC に対応していません。iPhone の Safari でお試しください。";
 
 export const handleFiles = async (fileList: FileList): Promise<void> => {
+  if (files.value.length + fileList.length > MAX_FILES ||
+      files.value.reduce((sum, item) => sum + item.file.size, 0) +
+      Array.from(fileList).reduce((sum, file) => sum + file.size, 0) > MAX_TOTAL_BYTES) {
+    saveError.value = "一度に扱える写真は50枚・合計200MBまでです。選択枚数を減らすか、結果を保存してページを再読み込みしてください。";
+    return;
+  }
   const items: FileItem[] = Array.from(fileList).map((file) => {
     const heicBlocked = !heicSupported && isHeicFile(file);
     return {
@@ -125,14 +95,7 @@ export const handleFiles = async (fileList: FileList): Promise<void> => {
   addFiles(items);
 
   const pendingItems = items.filter((i) => i.status === "pending");
-  // Kick off thumbnails in parallel with the compress queue: native
-  // downscaler decodes a 112px bitmap in ~10-30 ms, so all 10 rows light up
-  // with a thumb well before the first compress finishes. Fire-and-forget.
-  startThumbnails(pendingItems);
-  if (pendingItems.length > 0) {
-    const pendingIds = pendingItems.map((i) => i.id);
-    await runPool(pendingIds, compressOne, computeConcurrency(pendingItems));
-  }
+  await Promise.all(pendingItems.map((item) => compressOne(item.id)));
 };
 
 export const changeOutputFormat = async (
@@ -152,7 +115,7 @@ export const changePreset = async (next: Preset): Promise<void> => {
   // reflect the new quality. (compressOne reads preset.value at call time.)
   const completed = files.value.filter((f) => f.status === "completed");
   const ids = completed.map((f) => f.id);
-  await runPool(ids, compressOne, computeConcurrency(completed));
+  await Promise.all(ids.map(compressOne));
 };
 
 /** `IMG_1234.jpeg` → `IMG_1234-squished.jpg`; re-saving stays idempotent. */
@@ -215,6 +178,7 @@ export const App = () => (
   <div class="app">
     <Header />
     <InstallBanner />
+    {files.value.length === 0 && saveError.value && <div class="save-error" role="alert">{saveError.value}</div>}
     {files.value.length === 0 ? (
       <>
         <EmptyCard />

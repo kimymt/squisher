@@ -15,7 +15,7 @@
 ```bash
 npm test           # vitest run — ユニット + コンポーネント（CI 用、一度実行して終了）
 npm run test:watch # vitest — ウォッチモード
-npm run e2e        # playwright test — E2E（dev server を自動起動 or 再利用）
+npm run e2e        # 本番ビルド後にE2E（dev server を自動起動 or 再利用）
 ```
 
 ## レイヤー
@@ -24,7 +24,7 @@ npm run e2e        # playwright test — E2E（dev server を自動起動 or 再
 - **コンポーネントテスト** — `test/*.test.tsx`。`@testing-library/preact` で `render` → 操作 → アサート。「描画される」ではなく「何をするか」を検証する。
 - **E2E** — `e2e/*.spec.ts`。dev server に対して chromium（iPhone サイズ/UA）で実フロー。`compress.ts` の `createImageBitmap`→Canvas→`toBlob` は実ブラウザでしか動かないのでここで通す。フィクスチャ画像は `e2e/fixtures/`。
 
-現状のテスト（`npm test` 51件・11ファイル + `npm run e2e` 8 spec、全パス）:
+主なテスト:
 - `test/output-format.test.ts` — `detectOutputFormat` / `mimeFor` / `extFor`
 - `test/signals.test.ts` — `totalCompressedSize` / `saveableFiles` / `canSave`（`skipLarger × larger` の分岐）、`totalOriginalSize`、`addFiles`（saveError クリア）/ `updateFile` / `nextId`
 - `test/install.test.ts` — `shouldOfferInstall`（非iOS / iOS / standalone / dismiss）、`dismissInstallBanner`（storage 失敗時）
@@ -44,3 +44,5 @@ npm run e2e        # playwright test — E2E（dev server を自動起動 or 再
 - セットアップ/ティアダウン: 共有モジュール状態（`files` シグナル等）は `beforeEach` でリセット。`navigator` / `localStorage` のオーバーライドは `afterEach` で戻す。
 - テストにシークレット・API キーを import しない。
 - `expect(x).toBeDefined()` で済ませない。コードが**何をするか**をアサートする。
+
+セキュリティ回帰: `test/image-input.test.ts` はデコード前の制限、`e2e/security.spec.ts` は本番ビルドのCSP・オフライン起動・巨大画像の拒否を確認します。`npm audit --audit-level=low` は開発依存を含めてCIで実行します。
