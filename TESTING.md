@@ -24,7 +24,7 @@ npm run e2e        # 本番ビルド後にE2E（dev server を自動起動 or �
 - **コンポーネントテスト** — `test/*.test.tsx`。`@testing-library/preact` で `render` → 操作 → アサート。「描画される」ではなく「何をするか」を検証する。
 - **E2E** — `e2e/*.spec.ts`。dev server に対して chromium（iPhone サイズ/UA）で実フロー。`compress.ts` の `createImageBitmap`→Canvas→`toBlob` は実ブラウザでしか動かないのでここで通す。フィクスチャ画像は `e2e/fixtures/`。
 
-現状のテスト（`npm test` 51件・11ファイル + `npm run e2e` 8 spec、全パス）:
+主なテスト:
 - `test/output-format.test.ts` — `detectOutputFormat` / `mimeFor` / `extFor`
 - `test/signals.test.ts` — `totalCompressedSize` / `saveableFiles` / `canSave`（`skipLarger × larger` の分岐）、`totalOriginalSize`、`addFiles`（saveError クリア）/ `updateFile` / `nextId`
 - `test/install.test.ts` — `shouldOfferInstall`（非iOS / iOS / standalone / dismiss）、`dismissInstallBanner`（storage 失敗時）
