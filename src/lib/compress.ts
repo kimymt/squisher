@@ -65,6 +65,8 @@ export const compressImage = async (
 
     const blob = await toBlob(canvas, mimeFor(opts.outputFormat), preset.quality);
     if (!blob) return err("圧縮に失敗しました");
+    if (blob.type !== mimeFor(opts.outputFormat))
+      return err("このブラウザでは指定した形式に変換できません。別の出力形式を選択してください。");
 
     const durationMs = performance.now() - start;
     // Dev-mode only: surfaces timing on the console so QA can eyeball it

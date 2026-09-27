@@ -2,6 +2,7 @@ import type { FileItem, OutputFormat } from "../lib/types";
 import { changeOutputFormat } from "../app";
 import { sharedIds } from "../store/signals";
 import { formatBytes } from "../lib/format";
+import { webpSupported } from "../lib/webp-support";
 import { Spinner } from "./Spinner";
 import { CheckGlyph, WarningGlyph } from "./StatusGlyph";
 
@@ -60,13 +61,16 @@ export const FileRow = ({ item }: Props) => {
               role="radio"
               aria-checked={item.outputFormat === fmt}
               class={item.outputFormat === fmt ? "fmt-item active" : "fmt-item"}
-              disabled={busy}
+              disabled={busy || (fmt === "webp" && webpSupported.value !== true)}
               onClick={() => void changeOutputFormat(item.id, fmt)}
             >
               {FORMAT_LABELS[fmt]}
             </button>
           ))}
         </div>
+        {webpSupported.value === false && !errored && (
+          <div class="file-error">このブラウザではWebP形式に変換できません。</div>
+        )}
       </div>
       {busy && <Spinner />}
       {reduction !== null && (

@@ -1,3 +1,4 @@
+import { readHeicDimensions } from './heic-input';
 /** Bounds apply before either the thumbnail or full image decoder runs. */
 export const MAX_INPUT_BYTES = 100 * 1024 * 1024;
 export const MAX_FILES = 50;
@@ -71,6 +72,9 @@ export const validateImage = (file: File): Promise<Dimensions> => {
   if (!result) {
     result = (async () => {
       if (file.size > MAX_INPUT_BYTES) throw new Error('ファイルが大きすぎます。1枚100MB以下の画像を選択してください。');
+      const signature = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+      if (signature.length >= 8 && String.fromCharCode(...signature.subarray(4, 8)) === 'ftyp')
+        return readHeicDimensions(file);
       return readDimensions(new Uint8Array(await file.slice(0, HEADER_BYTES).arrayBuffer()));
     })();
     checked.set(file, result);

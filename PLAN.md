@@ -1,5 +1,7 @@
 # Squisher — 実装プラン (MVP)
 
+> 本書の初期調査（HEICの自動JPEG変換など）は当時の記録です。現在のHEIC対応・WebP生成可否・直列処理の方針はIOS27-COMPATIBILITY-PLAN.mdとtools/IOS27-RESULTS.mdを参照してください。
+
 > このプランは `/plan-eng-review` でレビュー済み + Phase 0 Spike の実機検証結果を反映。
 > 詳細は末尾の「## GSTACK REVIEW REPORT」を参照。
 >
