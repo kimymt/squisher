@@ -16,6 +16,7 @@ import {
   markShared,
 } from "./store/signals";
 import { compressImage } from "./lib/compress";
+import { checkWebpEncoding, webpSupported } from "./lib/webp-support";
 import { scheduleImage, MAX_FILES, MAX_TOTAL_BYTES } from "./lib/image-input";
 import { generateThumbnail } from "./lib/thumbnail";
 import { detectOutputFormat, mimeFor, extFor } from "./lib/output-format";
@@ -30,6 +31,12 @@ const compressOne = (id: string): Promise<void> => scheduleImage(async () => {
   if (!item) return;
 
   updateFile(id, { status: "processing", error: undefined });
+  const canEncodeWebp = await checkWebpEncoding();
+  if (item.outputFormat === "webp" && !canEncodeWebp) {
+    updateFile(id, { status: "error", result: undefined,
+      error: "このブラウザではWebP形式に変換できません。JPEGを選ぶと変換できますが、透明部分は保持されません。" });
+    return;
+  }
 
   // The quality preset can change while this file is mid-encode (the
   // segmented control stays enabled during processing, and changePreset
@@ -64,11 +71,8 @@ const compressOne = (id: string): Promise<void> => scheduleImage(async () => {
 });
 
 /**
- * iOS / iPadOS Safari decodes HEIC to JPEG inside the file picker, so we
- * never see HEIC there. On every other browser, HEIC reaches us as a
- * `.heic` blob and `createImageBitmap` fails with a generic error. Flag
- * those files up front so the user gets a useful message instead of
- * "画像を読み込めませんでした" with no explanation.
+ * Keep the tested iOS HEIC scope. On iOS, both direct HEIC and picker-
+ * converted JPEG pass through byte-based header admission before decode.
  */
 const heicSupported = supportsHeicInput();
 const HEIC_NOT_SUPPORTED_MESSAGE =
@@ -103,6 +107,7 @@ export const changeOutputFormat = async (
   format: OutputFormat
 ): Promise<void> => {
   const item = files.value.find((f) => f.id === id);
+  if (format === "webp" && webpSupported.value !== true) return;
   if (!item || item.outputFormat === format) return;
   updateFile(id, { outputFormat: format });
   await compressOne(id);

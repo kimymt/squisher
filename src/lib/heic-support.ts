@@ -1,15 +1,9 @@
 /**
- * Can this browser ingest HEIC files?
- *
- * - iOS / iPadOS Safari: yes — the system decodes HEIC to JPEG inside the
- *   `<input type="file">` picker, so a `.heic` file the user picks arrives
- *   in our handler as a JPEG (Phase 0 verified, iOS 13+ behaviour).
- * - macOS Safari: img can render HEIC, but `createImageBitmap(heicBlob)`
- *   fails, so our compress pipeline rejects it.
- * - Chrome / Firefox / Edge on any platform: no HEIC support, fails.
- *
- * We treat iOS / iPadOS as "supported", everything else as "not supported"
- * so the UI can warn before the user wastes a long upload.
+ * Product admission hint, not a codec capability test.
+ * iOS 27 device evidence: Photos supplied JPEG; Files supplied HEIC and
+ * createImageBitmap decoded it. Every file still passes header admission;
+ * actual codec support is determined by decode success, not this UA hint.
+ * Non-iOS HEIC is outside the product's tested support scope.
  */
 /**
  * Pure detection — exposed for unit tests. Production callers use

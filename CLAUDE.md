@@ -4,7 +4,7 @@ iPhone向けPWA画像圧縮アプリ。iPhone 写真(HEIC由来 JPEG / 直接 JP
 
 スタック: Vite 6 + TS + Preact + @preact/signals、圧縮は native Canvas `toBlob`(依存ゼロ)、PWA は `vite-plugin-pwa`。実装プランと進捗は `PLAN.md`、概要と開発手順は `README.md`。
 
-**重要:** iOS Safari は `<input type="file">` 経由で HEIC を自動的に JPEG にデコードしてアプリへ渡すため、アプリは HEIC を直接扱わない(`decode-heic.ts` 不要)。HEIC のままの圧縮は WebKit の制約により不可能。
+HEIC入力はiOSの経路によりJPEGへ変換される場合と原本で届く場合がある。`src/lib/heic-input.ts`で限定的なHEIC構造・寸法検査を行い、既存createImageBitmap経路で圧縮する。WebPは実行時に生成可否を判定し、非対応なら選択不可。PNGのJPEG化は明示選択のみ。現在の対応範囲と実機証拠は`tools/IOS27-RESULTS.md`を参照。
 
 ## Design System
 
