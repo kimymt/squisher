@@ -65,6 +65,11 @@ describe('shareFiles', () => {
 
 describe('downloadFile', () => {
   it('appends a clicked <a download> then removes it from the DOM', () => {
+    // jsdom 30's createObjectURL cannot handle File objects from the test
+    // environment, and the URL value is irrelevant to this test — stub both
+    // object-URL functions (restored by the file-level restoreAllMocks).
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     downloadFile(new File([new Uint8Array(4)], 'photo-squished.jpg', { type: 'image/jpeg' }));
     expect(click).toHaveBeenCalledOnce();
